@@ -1,13 +1,13 @@
-# ShadcnUI NextJS 14 Template.
+# ShadcnUI NextJS 14 Starter Template
 
 A Next.js 14 template for building apps with ShadcnUI and Tailwind CSS.
 
 This is a fork of `https://github.com/shadcn-ui/next-template` just updated for NextJS 14.
 
-![image](https://github.com/user-attachments/assets/6817f61d-4507-4edd-8dc0-78a4b3f5d6a7)
+## Demo  
+[https://shadcn-next-14.vercel.app/](https://shadcn-next-14.vercel.app/)  
 
-
-Everything is still clean with a nice frontpage. 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/dazeb/shadcnui-next-14) 
 
 All credit to [ShadcnUI](https://ui.shadcn.com/)
 
@@ -16,6 +16,10 @@ All credit to [ShadcnUI](https://ui.shadcn.com/)
 ```bash
 npx create-next-app -e https://github.com/dazeb/shadcnui-next-14
 ```
+## Screenshot
+
+![image](https://github.com/user-attachments/assets/6817f61d-4507-4edd-8dc0-78a4b3f5d6a7)
+
 
 ## Features
 
