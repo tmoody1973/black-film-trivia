@@ -4,7 +4,7 @@ A Next.js 14 template for building apps with ShadcnUI and Tailwind CSS.
 
 This is a fork of `https://github.com/shadcn-ui/next-template` just updated for NextJS 14.
 
-![image](https://github.com/user-attachments/assets/134ceaaa-eb58-44dd-9540-91d868f9164b)
+![image](https://github.com/user-attachments/assets/6817f61d-4507-4edd-8dc0-78a4b3f5d6a7)
 
 
 Everything is still clean with a nice frontpage. 
