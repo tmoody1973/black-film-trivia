@@ -8,9 +8,10 @@ import { Question } from '@/types/game'
 interface QuestionCardProps {
   question: Question
   onAnswer: (isCorrect: boolean) => void
+  currentPoints: number
 }
 
-export function QuestionCard({ question, onAnswer }: QuestionCardProps) {
+export function QuestionCard({ question, onAnswer, currentPoints }: QuestionCardProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [imageError, setImageError] = useState(false)
   const { score, streak } = useGameStore()
@@ -24,18 +25,19 @@ export function QuestionCard({ question, onAnswer }: QuestionCardProps) {
 
   return (
     <div className="w-full max-w-2xl space-y-6 rounded-lg border bg-card p-6 shadow-lg">
-      <div className="aspect-video relative overflow-hidden rounded-lg bg-muted">
+      <div className="mx-auto w-[400px] relative">
         {question.posterUrl && !imageError ? (
           <Image
             src={question.posterUrl}
             alt={`Movie poster for ${question.movieTitle}`}
-            fill
-            className="object-cover"
+            width={400}
+            height={600}
+            className="rounded-lg"
             onError={() => setImageError(true)}
             priority
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
+          <div className="h-[600px] flex items-center justify-center rounded-lg bg-muted">
             <p className="text-muted-foreground">No poster available</p>
           </div>
         )}
@@ -80,7 +82,7 @@ export function QuestionCard({ question, onAnswer }: QuestionCardProps) {
           <p className="text-lg font-medium">
             {selectedAnswer === question.answer ? (
               <span className="text-green-600 dark:text-green-400">
-                Correct! +{10 * (streak + 1)} points
+                Correct! +{currentPoints} points
               </span>
             ) : (
               <span className="text-red-600 dark:text-red-400">
@@ -89,7 +91,7 @@ export function QuestionCard({ question, onAnswer }: QuestionCardProps) {
             )}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Next question in 3 seconds...
+            Next question in 6 seconds...
           </p>
         </div>
       )}

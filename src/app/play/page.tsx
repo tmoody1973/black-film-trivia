@@ -68,8 +68,7 @@ export default function PlayPage() {
 
   const handleAnswer = async (isCorrect: boolean) => {
     if (isCorrect) {
-      const points = 10 * (streak + 1)
-      incrementScore(points)
+      incrementScore(10)
       incrementStreak()
     } else {
       resetStreak()
@@ -85,7 +84,7 @@ export default function PlayPage() {
     // Wait for the answer feedback to be visible
     setTimeout(() => {
       generateQuestion()
-    }, 3000)
+    }, 6000)
   }
 
   const saveScore = async () => {
@@ -183,6 +182,7 @@ export default function PlayPage() {
       <QuestionCard
         question={currentQuestion}
         onAnswer={handleAnswer}
+        currentPoints={10}
       />
     </div>
   )
