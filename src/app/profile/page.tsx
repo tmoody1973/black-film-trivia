@@ -1,136 +1,190 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase'
-import { 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signOut, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
   signInAnonymously,
-  updateProfile
+  updateProfile,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
 } from 'firebase/auth'
 
-const provider = new GoogleAuthProvider()
-
 export default function ProfilePage() {
-  const [user, setUser] = useState(auth.currentUser)
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [currentUser, setCurrentUser] = useState(auth.currentUser)
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user)
+      setCurrentUser(user)
     })
 
     return () => unsubscribe()
   }, [])
 
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut()
+      setCurrentUser(null)
+    } catch (error) {
+      console.error('Error signing out:', error)
+      setError('Failed to sign out')
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing in with Google:', error)
+      setError('Failed to sign in with Google')
+    }
+  }
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    
+    if (!email || !password || (isSignUp && !username)) {
+      setError('Please fill in all fields')
+      return
+    }
+
     try {
+      let userCredential
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password)
+        userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        // Set display name for new users
+        if (userCredential.user) {
+          await updateProfile(userCredential.user, {
+            displayName: username
+          })
+        }
       } else {
-        await signInWithEmailAndPassword(auth, email, password)
+        userCredential = await signInWithEmailAndPassword(auth, email, password)
       }
-      router.push('/play')
+      router.push('/')
     } catch (error) {
       console.error('Error with email auth:', error)
       setError(error instanceof Error ? error.message : 'Authentication failed')
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleGuestSignIn = async () => {
     try {
-      await signInWithPopup(auth, provider)
-      router.push('/play')
-    } catch (error) {
-      console.error('Error signing in with Google:', error)
-      setError(error instanceof Error ? error.message : 'Google authentication failed')
-    }
-  }
-
-  const handleAnonymousSignIn = async () => {
-    try {
-      await signInAnonymously(auth)
-      router.push('/play')
-    } catch (error) {
-      console.error('Error signing in anonymously:', error)
-      setError(error instanceof Error ? error.message : 'Anonymous authentication failed')
-    }
-  }
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth)
+      if (!username) {
+        setError('Please enter a guest name')
+        return
+      }
+      const credential = await signInAnonymously(auth)
+      if (credential.user) {
+        await updateProfile(credential.user, {
+          displayName: username
+        })
+      }
       router.push('/')
     } catch (error) {
-      console.error('Error signing out:', error)
-      setError(error instanceof Error ? error.message : 'Sign out failed')
+      console.error('Error signing in as guest:', error)
+      setError('Failed to sign in as guest')
     }
   }
 
-  if (!user) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center space-y-8">
-        <div className="text-center space-y-4 max-w-2xl">
-          <h1 className="text-4xl font-bold tracking-tighter">Black Film Trivia</h1>
-          <p className="text-xl text-muted-foreground">
-            Test your knowledge of Black Cinema in this engaging trivia game. Challenge yourself with questions about iconic films, directors, and cultural moments in Black cinema history.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Created by Tarik Moody • Powered by Claude AI
-          </p>
+  return (
+    <div className="container mx-auto flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-8">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h1 className="flex items-center justify-center gap-3 text-4xl font-bold">
+            {currentUser ? 'Profile' : 'Welcome to Black Film Trivia'}
+            <span className="rounded bg-primary/10 px-2 py-1 text-sm font-medium text-primary">BETA</span>
+          </h1>
+          {!currentUser ? (
+            <>
+              <p className="mt-2 text-muted-foreground">
+                Test your knowledge of films directed by Black filmmakers and movies exploring Black stories and experiences.
+                Created by Tarik Moody using Claude AI.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                This game is a learning exercise to build an app using Cursor AI IDE. Questions are generated using Claude Sonnet 3.5, and while most questions and answers are accurate, AI isn't perfect.
+              </p>
+            </>
+          ) : (
+            <div className="mt-4 space-y-4">
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-lg font-medium">Signed in as:</p>
+                <p className="text-muted-foreground">{currentUser.displayName || 'No display name'}</p>
+                <p className="text-sm text-muted-foreground">{currentUser.email || 'Guest User'}</p>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="w-full rounded-md border border-destructive bg-destructive/10 px-4 py-2 text-destructive hover:bg-destructive/20"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="w-full max-w-sm space-y-8">
-          <h2 className="text-2xl font-semibold text-center">Sign In</h2>
-          <p className="text-center text-muted-foreground">
-            Sign in to save your progress and compete on the leaderboard.
-          </p>
+        {error && (
+          <div className="rounded-md bg-destructive/15 p-3 text-center text-sm text-destructive">
+            {error}
+          </div>
+        )}
 
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2"
-            />
-            <button
-              type="submit"
-              className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-            >
-              {isSignUp ? 'Sign Up' : 'Sign In'} with Email
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="w-full text-sm text-muted-foreground hover:underline"
-            >
-              {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-            </button>
-          </form>
+        {!currentUser && (
+          <div className="space-y-4">
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              {isSignUp && (
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full rounded-md border bg-background px-4 py-2"
+                />
+              )}
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-md border bg-background px-4 py-2"
+                data-lpignore="true"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-md border bg-background px-4 py-2"
+                data-lpignore="true"
+              />
+              <button
+                type="submit"
+                className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+              >
+                {isSignUp ? 'Sign Up' : 'Sign In'}
+              </button>
+            </form>
 
-          <div className="flex flex-col space-y-4">
+            <div className="text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+              </button>
+            </div>
+
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <div className="w-full border-t"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
@@ -139,51 +193,28 @@ export default function ProfilePage() {
 
             <button
               onClick={handleGoogleSignIn}
-              className="w-full rounded-md border border-input bg-background px-4 py-2 hover:bg-accent hover:text-accent-foreground"
+              className="w-full rounded-md border bg-background px-4 py-2 hover:bg-accent hover:text-accent-foreground"
             >
               Sign in with Google
             </button>
-            <button
-              onClick={handleAnonymousSignIn}
-              className="w-full rounded-md border border-input bg-background px-4 py-2 hover:bg-accent hover:text-accent-foreground"
-            >
-              Continue as Guest
-            </button>
-          </div>
 
-          {error && (
-            <p className="text-sm text-destructive text-center">{error}</p>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="container mx-auto py-8">
-      <div className="mx-auto max-w-2xl space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{user.displayName || 'Guest User'}</h1>
-            <p className="text-muted-foreground">{user.email || 'Anonymous'}</p>
-            <p className="text-sm text-muted-foreground">
-              {user.isAnonymous ? 'Playing as guest' : 'Signed in user'}
-            </p>
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Enter guest name"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full rounded-md border bg-background px-4 py-2"
+              />
+              <button
+                onClick={handleGuestSignIn}
+                className="w-full rounded-md border bg-background px-4 py-2 hover:bg-accent hover:text-accent-foreground"
+              >
+                Play as Guest
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            Sign Out
-          </button>
-        </div>
-
-        <div className="rounded-lg border bg-card p-6">
-          <h2 className="mb-4 text-xl font-semibold">Game History</h2>
-          <div className="text-center text-muted-foreground">
-            Game history feature coming soon!
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

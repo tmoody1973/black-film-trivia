@@ -6,6 +6,8 @@ export interface Question {
   movieTitle: string
   difficulty: 'easy' | 'medium' | 'hard'
   posterUrl?: string
+  plot?: string
+  director?: string
 }
 
 export interface Score {

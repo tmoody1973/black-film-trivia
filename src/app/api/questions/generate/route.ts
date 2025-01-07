@@ -27,16 +27,25 @@ export async function POST(request: Request) {
     console.log('Movie data:', movieData)
     
     const posterUrl = movieData.Poster
+    const director = movieData.Director
 
-    // Generate question using Claude
-    const prompt = `Generate a trivia question about Black cinema in JSON format with fields: question, options (array), answer, and movie_title. 
-      Use the film "${movieTitle}" and craft a unique and challenging (but not impossibly difficult) question about its plot, characters, director, awards, or an interesting fact, along with four possible answer options including the correct one.`
+    // Generate expanded plot and question using Claude
+    const prompt = `For the film "${movieTitle}", please provide:
+    1. A 2-3 sentence plot summary that captures the key elements of the story
+    2. A trivia question about the film
+    
+    Format your response in JSON with these fields:
+    - plot: A 2-3 sentence summary of the film's plot
+    - question: The trivia question
+    - options: Array of 4 possible answers
+    - answer: The correct answer
+    - movie_title: The title of the film`
 
     console.log('Sending prompt to Claude:', prompt)
 
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 300,
+      max_tokens: 500,
       messages: [{
         role: 'user',
         content: prompt
@@ -56,6 +65,7 @@ export async function POST(request: Request) {
       ...questionData,
       id: Math.random().toString(36).substring(7),
       posterUrl,
+      director,
       difficulty: 'medium'
     })
   } catch (error) {
