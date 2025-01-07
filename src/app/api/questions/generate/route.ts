@@ -32,7 +32,8 @@ export async function POST(request: Request) {
     // Generate expanded plot and question using Claude
     const prompt = `For the film "${movieTitle}", please provide:
     1. A 2-3 sentence plot summary that captures the key elements of the story
-    2. A trivia question about the film
+    2. A moderately challenging trivia question about the film The question should focus on the film's plot, characters, director, awards, or interesting behind-the-scenes facts. For each new request, select a different movie from the list and create a unique question that is engaging but not excessively difficult to answer.
+    
     
     Format your response in JSON with these fields:
     - plot: A 2-3 sentence summary of the film's plot

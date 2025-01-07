@@ -28,15 +28,22 @@ export default function PlayPage() {
   } = useGameStore()
 
   useEffect(() => {
-    resetGame()
-    loadAskedQuestions()
-  }, [])
-
-  useEffect(() => {
     if (isGameOver) {
       saveScore()
     }
   }, [isGameOver])
+
+  useEffect(() => {
+    // Always reset game state before starting a new game
+    resetGame()
+    setIsLoading(true)
+    loadAskedQuestions().finally(() => setIsLoading(false))
+    
+    // Cleanup function to reset game state when component unmounts
+    return () => {
+      resetGame()
+    }
+  }, []) // Empty dependency array means this runs once when component mounts
 
   const loadAskedQuestions = async () => {
     const user = auth.currentUser
