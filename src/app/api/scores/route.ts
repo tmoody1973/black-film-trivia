@@ -1,31 +1,68 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebase'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { adminDb } from '@/lib/firebase-admin'
+import { Timestamp } from 'firebase-admin/firestore'
+
+export async function GET() {
+  try {
+    const leaderboardRef = adminDb.collection('leaderboard')
+    const querySnapshot = await leaderboardRef
+      .orderBy('score', 'desc')
+      .limit(100)
+      .get()
+
+    const entries = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+
+    return NextResponse.json(entries)
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to fetch leaderboard' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function POST(request: Request) {
   try {
-    const { userId, username, score, streak } = await request.json()
+    const body = await request.json()
+    const { userId, username, score, streak } = body
 
-    if (!userId || !username || typeof score !== 'number' || typeof streak !== 'number') {
-      return NextResponse.json(
-        { error: 'Invalid request data' },
-        { status: 400 }
-      )
+    if (!userId) {
+      return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
+    }
+    if (!username) {
+      return NextResponse.json({ error: 'Missing username' }, { status: 400 })
+    }
+    if (typeof score !== 'number') {
+      return NextResponse.json({ error: 'Invalid score' }, { status: 400 })
+    }
+    if (typeof streak !== 'number') {
+      return NextResponse.json({ error: 'Invalid streak' }, { status: 400 })
     }
 
-    const scoreRef = await addDoc(collection(db, 'leaderboard'), {
+    const scoreData = {
       userId,
       username,
       score,
       streak,
-      completedAt: serverTimestamp(),
-    })
+      completedAt: Timestamp.now()
+    }
 
-    return NextResponse.json({ id: scoreRef.id })
+    const leaderboardRef = adminDb.collection('leaderboard')
+    const docRef = await leaderboardRef.add(scoreData)
+
+    return NextResponse.json({
+      success: true,
+      id: docRef.id,
+      message: 'Score saved successfully'
+    })
   } catch (error) {
     console.error('Error saving score:', error)
     return NextResponse.json(
-      { error: 'Failed to save score' },
+      { error: error instanceof Error ? error.message : 'Failed to save score' },
       { status: 500 }
     )
   }

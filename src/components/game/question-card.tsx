@@ -27,17 +27,19 @@ export function QuestionCard({ question, onAnswer, currentPoints }: QuestionCard
     <div className="w-full max-w-2xl space-y-6 rounded-lg border bg-card p-6 shadow-lg">
       <div className="mx-auto w-[400px] relative">
         {question.posterUrl && !imageError ? (
-          <Image
-            src={question.posterUrl}
-            alt={`Movie poster for ${question.movieTitle}`}
-            width={400}
-            height={600}
-            className="rounded-lg"
-            onError={() => setImageError(true)}
-            priority
-          />
+          <div className="relative aspect-[2/3] w-full">
+            <Image
+              src={question.posterUrl}
+              alt={`Movie poster for ${question.movieTitle}`}
+              fill
+              sizes="(max-width: 400px) 100vw, 400px"
+              className="rounded-lg object-cover"
+              onError={() => setImageError(true)}
+              priority
+            />
+          </div>
         ) : (
-          <div className="h-[600px] flex items-center justify-center rounded-lg bg-muted">
+          <div className="aspect-[2/3] w-full flex items-center justify-center rounded-lg bg-muted">
             <p className="text-muted-foreground">No poster available</p>
           </div>
         )}

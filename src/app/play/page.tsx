@@ -11,6 +11,7 @@ export default function PlayPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [askedQuestions, setAskedQuestions] = useState<string[]>([])
   const {
     currentQuestion,
     score,
@@ -28,7 +29,7 @@ export default function PlayPage() {
 
   useEffect(() => {
     resetGame()
-    generateQuestion()
+    loadAskedQuestions()
   }, [])
 
   useEffect(() => {
@@ -37,12 +38,45 @@ export default function PlayPage() {
     }
   }, [isGameOver])
 
+  const loadAskedQuestions = async () => {
+    const user = auth.currentUser
+    if (!user || user.isAnonymous) {
+      generateQuestion()  // Generate question immediately for anonymous users
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/user-questions?userId=${user.uid}`)
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load questions')
+      }
+
+      setAskedQuestions(data.askedQuestions || [])
+      generateQuestion()
+    } catch (error) {
+      console.error('Error loading asked questions:', error)
+      setAskedQuestions([])
+      generateQuestion()
+    }
+  }
+
   const generateQuestion = async () => {
     setError(null)
     setIsLoading(true)
-    const selectedMovie = BLACK_DIRECTED_MOVIES[Math.floor(Math.random() * BLACK_DIRECTED_MOVIES.length)]
     
     try {
+      // Filter out movies that have already been asked about
+      const availableMovies = BLACK_DIRECTED_MOVIES.filter(
+        movie => !askedQuestions.includes(movie)
+      )
+
+      // If we've asked about all movies, reset the list
+      const moviesToUse = availableMovies.length > 0 ? availableMovies : BLACK_DIRECTED_MOVIES
+      
+      const selectedMovie = moviesToUse[Math.floor(Math.random() * moviesToUse.length)]
+      
       const response = await fetch('/api/questions/generate', {
         method: 'POST',
         headers: {
@@ -55,6 +89,36 @@ export default function PlayPage() {
       
       if (!response.ok) {
         throw new Error(data.details || data.error || 'Failed to generate question')
+      }
+
+      // Update asked questions for registered users
+      const user = auth.currentUser
+      if (user && !user.isAnonymous) {
+        try {
+          // Update local state first
+          const newQuestions = [...askedQuestions, selectedMovie]
+          setAskedQuestions(newQuestions)
+          
+          // Save to API
+          const saveResponse = await fetch('/api/user-questions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.uid,
+              askedQuestions: newQuestions
+            }),
+          })
+
+          if (!saveResponse.ok) {
+            const saveData = await saveResponse.json()
+            console.error('Failed to save questions:', saveData.error)
+          }
+        } catch (error) {
+          console.error('Error saving asked questions:', error)
+          // Already updated local state, so just continue
+        }
       }
       
       setCurrentQuestion(data)
@@ -77,7 +141,10 @@ export default function PlayPage() {
     incrementQuestionsAnswered()
 
     if (questionsAnswered + 1 >= 10) {
-      setGameOver(true)
+      // Wait for the answer feedback to be visible before ending the game
+      setTimeout(() => {
+        setGameOver(true)
+      }, 6000)
       return
     }
 
@@ -90,25 +157,44 @@ export default function PlayPage() {
   const saveScore = async () => {
     const user = auth.currentUser
     if (!user) {
+      console.log('No user found, redirecting to profile')
       router.push('/profile')
       return
     }
 
     try {
-      await fetch('/api/scores', {
+      const scoreData = {
+        userId: user.uid,
+        username: user.displayName || 'Anonymous',
+        score,
+        streak,
+      }
+      
+      console.log('Saving score:', scoreData)
+      const response = await fetch('/api/scores', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: user.uid,
-          username: user.displayName || 'Anonymous',
-          score,
-          streak,
-        }),
+        body: JSON.stringify(scoreData),
       })
+
+      const data = await response.json()
+      console.log('Score save response:', data)
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save score')
+      }
+
+      console.log('Score saved successfully:', data.message)
+      router.push('/leaderboard')
     } catch (error) {
       console.error('Error saving score:', error)
+      setError(error instanceof Error ? error.message : 'Failed to save score')
+      // Still allow viewing the leaderboard even if save failed
+      setTimeout(() => {
+        router.push('/leaderboard')
+      }, 3000)
     }
   }
 
