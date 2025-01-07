@@ -8,5 +8,6 @@ declare namespace NodeJS {
     NEXT_PUBLIC_FIREBASE_APP_ID: string
     OMDB_API_KEY: string
     CLAUDE_API_KEY: string
+    NEXT_PUBLIC_GA_MEASUREMENT_ID: string
   }
 } 
