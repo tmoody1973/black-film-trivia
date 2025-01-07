@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  experimental: {},
+  images: {
+    domains: ['m.media-amazon.com'],
+  },
 }
 
 export default nextConfig
