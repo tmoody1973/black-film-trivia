@@ -6,12 +6,14 @@ import { useGameStore } from '@/store/game'
 import { QuestionCard } from '@/components/game/question-card'
 import { BLACK_DIRECTED_MOVIES } from '@/lib/constants'
 import { auth } from '@/lib/firebase'
+import { Question } from '@/types/game'
 
 export default function PlayPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [askedQuestions, setAskedQuestions] = useState<string[]>([])
+  const [nextQuestion, setNextQuestion] = useState<Question | null>(null)
   const {
     currentQuestion,
     score,
@@ -127,8 +129,12 @@ export default function PlayPage() {
           // Already updated local state, so just continue
         }
       }
-      
-      setCurrentQuestion(data)
+
+      if (!currentQuestion) {
+        setCurrentQuestion(data)
+      } else {
+        setNextQuestion(data)
+      }
     } catch (error) {
       console.error('Error generating question:', error)
       setError(error instanceof Error ? error.message : 'Failed to generate question')
@@ -151,14 +157,23 @@ export default function PlayPage() {
       // Wait for the answer feedback to be visible before ending the game
       setTimeout(() => {
         setGameOver(true)
-      }, 6000)
+      }, 3000) // Reduced from 6000 to 3000
       return
     }
 
-    // Wait for the answer feedback to be visible
-    setTimeout(() => {
-      generateQuestion()
-    }, 6000)
+    // If we have a preloaded question, use it and generate the next one
+    if (nextQuestion) {
+      setTimeout(() => {
+        setCurrentQuestion(nextQuestion)
+        setNextQuestion(null)
+        generateQuestion() // Start loading the next question
+      }, 3000) // Reduced from 6000 to 3000
+    } else {
+      // Fallback to the old behavior if no preloaded question
+      setTimeout(() => {
+        generateQuestion()
+      }, 3000) // Reduced from 6000 to 3000
+    }
   }
 
   const saveScore = async () => {

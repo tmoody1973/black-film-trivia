@@ -107,7 +107,7 @@ export function QuestionCard({ question, onAnswer, currentPoints }: QuestionCard
             )}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Next question in 6 seconds...
+            Next question in 3 seconds...
           </p>
         </div>
       )}

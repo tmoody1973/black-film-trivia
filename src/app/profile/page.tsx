@@ -68,12 +68,35 @@ export default function ProfilePage() {
           })
         }
       } else {
-        userCredential = await signInWithEmailAndPassword(auth, email, password)
+        try {
+          userCredential = await signInWithEmailAndPassword(auth, email, password)
+        } catch (signInError: any) {
+          // Handle specific sign-in errors
+          if (signInError.code === 'auth/invalid-credential') {
+            setError('Invalid email or password. If you haven\'t registered yet, please sign up first.')
+          } else if (signInError.code === 'auth/user-not-found') {
+            setError('No account found with this email. Please sign up first.')
+          } else if (signInError.code === 'auth/wrong-password') {
+            setError('Incorrect password. Please try again.')
+          } else {
+            setError(signInError.message || 'Failed to sign in')
+          }
+          return
+        }
       }
       router.push('/')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error with email auth:', error)
-      setError(error instanceof Error ? error.message : 'Authentication failed')
+      // Handle specific sign-up errors
+      if (error.code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists. Please sign in instead.')
+      } else if (error.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters long.')
+      } else if (error.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.')
+      } else {
+        setError(error.message || 'Authentication failed')
+      }
     }
   }
 
