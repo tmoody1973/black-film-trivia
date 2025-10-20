@@ -60,7 +60,14 @@ export function QuestionCard({ question, onAnswer, currentPoints }: QuestionCard
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-card-foreground">{question.question}</h3>
+        <div className="flex items-start justify-between gap-4">
+          <h3 className="text-lg font-semibold text-card-foreground flex-grow">{question.question}</h3>
+          {question.category && (
+            <span className="flex-shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize whitespace-nowrap">
+              {question.category.replace('_', ' ')}
+            </span>
+          )}
+        </div>
         <div className="grid gap-3">
           {question.options.map((option) => (
             <button
@@ -94,8 +101,8 @@ export function QuestionCard({ question, onAnswer, currentPoints }: QuestionCard
       </div>
 
       {selectedAnswer && (
-        <div className="mt-4 text-center">
-          <p className="text-lg font-medium">
+        <div className="mt-4 space-y-3 rounded-lg border bg-muted/50 p-4">
+          <p className="text-lg font-medium text-center">
             {selectedAnswer === question.answer ? (
               <span className="text-secondary">
                 Correct! +{currentPoints} points
@@ -106,7 +113,15 @@ export function QuestionCard({ question, onAnswer, currentPoints }: QuestionCard
               </span>
             )}
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
+          {question.explanation && (
+            <div className="border-t pt-3">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-foreground">Did you know? </span>
+                {question.explanation}
+              </p>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground text-center pt-2">
             Next question in 3 seconds...
           </p>
         </div>

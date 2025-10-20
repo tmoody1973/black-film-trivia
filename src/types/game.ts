@@ -8,6 +8,8 @@ export interface Question {
   posterUrl?: string
   plot?: string
   director?: string
+  category?: 'plot' | 'creative_team' | 'cultural_impact' | 'behind_scenes' | 'themes'
+  explanation?: string
 }
 
 export interface Score {

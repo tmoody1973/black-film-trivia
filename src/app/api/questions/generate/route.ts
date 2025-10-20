@@ -99,19 +99,78 @@ export async function POST(request: Request) {
       // Claude API call
       anthropic.messages.create({
         model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 500,
+        max_tokens: 700,
         messages: [{
           role: 'user',
-          content: `For the film "${movieTitle}", please provide:
-          1. A 2-3 sentence plot summary that captures the key elements of the story
-          2. A moderately challenging trivia question about the film The question should focus on the film's plot, characters, director, awards, or interesting behind-the-scenes facts. For each new request, select a different movie from the list and create a unique question that is engaging but not excessively difficult to answer.
-          
-          Format your response in JSON with these fields:
-          - plot: A 2-3 sentence summary of the film's plot
-          - question: The trivia question
-          - options: Array of 4 possible answers
-          - answer: The correct answer
-          - movie_title: The title of the film`
+          content: `You are creating trivia questions for a game celebrating Black cinema and the incredible contributions of Black filmmakers, actors, and storytellers to the art of film.
+
+For the film "${movieTitle}", create an engaging trivia question that:
+
+CONTEXT & PURPOSE:
+- Celebrates the cultural significance and artistic excellence of Black cinema
+- Educates players about the film's impact, themes, and creative achievements
+- Makes players excited to learn more about the film
+
+QUESTION GUIDELINES:
+1. Choose ONE focus area:
+   - Plot & Characters: Key story moments, character motivations, memorable scenes
+   - Creative Team: Director's vision, cinematography, music/score, screenplay
+   - Cultural Impact: Awards won, box office success, critical acclaim, social influence
+   - Behind the Scenes: Casting choices, filming locations, production challenges, fun facts
+   - Themes & Meaning: Social commentary, cultural representation, artistic symbolism
+
+2. Difficulty Level (MEDIUM):
+   - Avoid overly obscure details (e.g., "What was the assistant director's middle name?")
+   - Avoid too-easy questions (e.g., "Who is the main character?")
+   - Perfect difficulty: Requires having watched the film OR knowing film history
+   - Reward genuine film knowledge, not trivial minutiae
+
+3. Question Quality:
+   - Be specific and clear
+   - Make the question interesting and engaging
+   - Include context when helpful (e.g., "In the Oscar-winning film...")
+   - Celebrate the achievement (e.g., "What groundbreaking technique did...")
+
+DISTRACTOR (WRONG ANSWER) GUIDELINES:
+- Make distractors plausible but clearly distinguishable for someone who knows the film
+- Use real names/facts from the film industry (don't invent fake names)
+- Ensure one answer is definitively correct
+- Avoid trick questions or overly similar options
+
+PLOT SUMMARY GUIDELINES:
+- Write 2-3 engaging sentences
+- Capture the essence and emotional core of the story
+- Highlight what makes this film culturally significant
+- Avoid spoilers of major plot twists
+
+Format your response as valid JSON with these exact fields:
+{
+  "plot": "2-3 sentence engaging plot summary",
+  "question": "The trivia question",
+  "options": ["Correct answer", "Plausible distractor 1", "Plausible distractor 2", "Plausible distractor 3"],
+  "answer": "The correct answer (must exactly match one option)",
+  "movie_title": "${movieTitle}",
+  "category": "one of: plot, creative_team, cultural_impact, behind_scenes, themes",
+  "explanation": "1-2 sentences explaining why this answer is significant or interesting"
+}
+
+EXAMPLE (for reference style only):
+{
+  "plot": "A young African-American man visits his white girlfriend's family estate, only to discover a disturbing secret about their intentions. Jordan Peele's directorial debut masterfully blends social commentary with psychological horror.",
+  "question": "What groundbreaking achievement did 'Get Out' accomplish at the 90th Academy Awards?",
+  "options": [
+    "Jordan Peele became the first African-American to win Best Original Screenplay",
+    "It won Best Picture",
+    "Daniel Kaluuya became the youngest Best Actor winner",
+    "It won Best Director and Best Picture"
+  ],
+  "answer": "Jordan Peele became the first African-American to win Best Original Screenplay",
+  "movie_title": "Get Out",
+  "category": "cultural_impact",
+  "explanation": "This historic win recognized Peele's sharp social commentary and innovative storytelling, opening doors for more Black voices in screenwriting."
+}
+
+Now create a unique, engaging question for "${movieTitle}".`
         }]
       })
     ])
