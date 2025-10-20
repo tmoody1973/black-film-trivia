@@ -34,6 +34,7 @@ export interface GameState {
   streak: number
   questionsAnswered: number
   isGameOver: boolean
+  difficulty: 'easy' | 'medium' | 'hard'
 }
 
 export interface LeaderboardEntry {

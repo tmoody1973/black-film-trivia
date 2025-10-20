@@ -14,6 +14,10 @@ const routes = [
     label: "Leaderboard",
   },
   {
+    href: "/admin",
+    label: "Analytics",
+  },
+  {
     href: "/profile",
     label: "Profile",
   },

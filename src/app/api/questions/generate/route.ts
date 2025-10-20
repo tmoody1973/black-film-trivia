@@ -20,6 +20,36 @@ function getCacheKey(movieTitle: string): string {
   return movieTitle.toLowerCase().trim().replace(/[^a-z0-9]/g, '-')
 }
 
+/**
+ * Get difficulty-specific instructions for the prompt
+ */
+function getDifficultyInstructions(difficulty: string): string {
+  switch (difficulty) {
+    case 'easy':
+      return `2. Difficulty Level (EASY):
+   - Focus on main plot points and well-known facts
+   - Questions should be answerable by someone who has seen the film once
+   - Avoid obscure details or deep film history knowledge
+   - Examples: "Who directed this film?", "What is the main character's goal?", "Where is the film primarily set?"
+   - Perfect for: Casual viewers and newcomers to the film`
+
+    case 'hard':
+      return `2. Difficulty Level (HARD):
+   - Focus on awards, behind-the-scenes details, and deep film knowledge
+   - Questions should challenge even film enthusiasts
+   - Include specific details about production, historical context, or critical reception
+   - Examples: "What cinematography technique was pioneered in this film?", "What award did the composer win for the score?"
+   - Perfect for: Film buffs and cinema scholars`
+
+    default: // medium
+      return `2. Difficulty Level (MEDIUM):
+   - Avoid overly obscure details (e.g., "What was the assistant director's middle name?")
+   - Avoid too-easy questions (e.g., "Who is the main character?")
+   - Perfect difficulty: Requires having watched the film OR knowing film history
+   - Reward genuine film knowledge, not trivial minutiae`
+  }
+}
+
 export async function POST(request: Request) {
   try {
     // Rate limiting
@@ -42,7 +72,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { movieTitle } = await request.json()
+    const { movieTitle, difficulty = 'medium' } = await request.json()
 
     // Input validation
     if (!movieTitle || typeof movieTitle !== 'string') {
@@ -66,8 +96,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check cache first
-    const cacheKey = getCacheKey(movieTitle)
+    if (!['easy', 'medium', 'hard'].includes(difficulty)) {
+      return NextResponse.json(
+        { error: 'Invalid difficulty level' },
+        { status: 400 }
+      )
+    }
+
+    // Check cache first (cache key includes difficulty)
+    const cacheKey = `${getCacheKey(movieTitle)}-${difficulty}`
     const cacheRef = adminDb.collection(CACHE_COLLECTION).doc(cacheKey)
     const cacheDoc = await cacheRef.get()
 
@@ -119,11 +156,7 @@ QUESTION GUIDELINES:
    - Behind the Scenes: Casting choices, filming locations, production challenges, fun facts
    - Themes & Meaning: Social commentary, cultural representation, artistic symbolism
 
-2. Difficulty Level (MEDIUM):
-   - Avoid overly obscure details (e.g., "What was the assistant director's middle name?")
-   - Avoid too-easy questions (e.g., "Who is the main character?")
-   - Perfect difficulty: Requires having watched the film OR knowing film history
-   - Reward genuine film knowledge, not trivial minutiae
+${getDifficultyInstructions(difficulty)}
 
 3. Question Quality:
    - Be specific and clear
@@ -191,7 +224,7 @@ Now create a unique, engaging question for "${movieTitle}".`
       ...questionData,
       posterUrl: movieData.Poster,
       director: movieData.Director,
-      difficulty: 'medium'
+      difficulty: difficulty
     }
 
     // Store in cache (without ID - we'll generate fresh IDs on retrieval)
@@ -202,6 +235,7 @@ Now create a unique, engaging question for "${movieTitle}".`
 
     await cacheRef.set({
       movieTitle,
+      difficulty,
       question: fullQuestion,
       createdAt: now,
       expiresAt: expiresAt,

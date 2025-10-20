@@ -8,6 +8,7 @@ interface GameStore extends GameState {
   resetStreak: () => void
   incrementQuestionsAnswered: () => void
   setGameOver: (isOver: boolean) => void
+  setDifficulty: (difficulty: 'easy' | 'medium' | 'hard') => void
   resetGame: () => void
 }
 
@@ -17,6 +18,7 @@ const initialState: GameState = {
   streak: 0,
   questionsAnswered: 0,
   isGameOver: false,
+  difficulty: 'medium',
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -28,5 +30,6 @@ export const useGameStore = create<GameStore>((set) => ({
   incrementQuestionsAnswered: () =>
     set((state) => ({ questionsAnswered: state.questionsAnswered + 1 })),
   setGameOver: (isOver) => set({ isGameOver: isOver }),
+  setDifficulty: (difficulty) => set({ difficulty }),
   resetGame: () => set({ ...initialState }),
 })) 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGameStore } from '@/store/game'
 import { QuestionCard } from '@/components/game/question-card'
+import { DifficultySelector, DifficultyLevel } from '@/components/difficulty-selector'
 import { BLACK_DIRECTED_MOVIES } from '@/lib/constants'
 import { auth } from '@/lib/firebase'
 import { Question } from '@/types/game'
@@ -14,18 +15,21 @@ export default function PlayPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [askedQuestions, setAskedQuestions] = useState<string[]>([])
   const [nextQuestion, setNextQuestion] = useState<Question | null>(null)
+  const [showDifficultySelector, setShowDifficultySelector] = useState(true)
   const {
     currentQuestion,
     score,
     streak,
     questionsAnswered,
     isGameOver,
+    difficulty,
     setCurrentQuestion,
     incrementScore,
     incrementStreak,
     resetStreak,
     incrementQuestionsAnswered,
     setGameOver,
+    setDifficulty,
     resetGame,
   } = useGameStore()
 
@@ -38,14 +42,19 @@ export default function PlayPage() {
   useEffect(() => {
     // Always reset game state before starting a new game
     resetGame()
-    setIsLoading(true)
-    loadAskedQuestions().finally(() => setIsLoading(false))
-    
+
     // Cleanup function to reset game state when component unmounts
     return () => {
       resetGame()
     }
   }, []) // Empty dependency array means this runs once when component mounts
+
+  const handleDifficultySelect = (selectedDifficulty: DifficultyLevel) => {
+    setDifficulty(selectedDifficulty)
+    setShowDifficultySelector(false)
+    setIsLoading(true)
+    loadAskedQuestions().finally(() => setIsLoading(false))
+  }
 
   const loadAskedQuestions = async () => {
     const user = auth.currentUser
@@ -90,7 +99,10 @@ export default function PlayPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ movieTitle: selectedMovie }),
+        body: JSON.stringify({
+          movieTitle: selectedMovie,
+          difficulty: difficulty
+        }),
       })
 
       const data = await response.json()
@@ -211,6 +223,14 @@ export default function PlayPage() {
     }
   }
 
+  if (showDifficultySelector) {
+    return (
+      <div className="container mx-auto flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-8">
+        <DifficultySelector onSelect={handleDifficultySelect} currentDifficulty={difficulty} />
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center space-y-8">
@@ -251,7 +271,7 @@ export default function PlayPage() {
           <button
             onClick={() => {
               resetGame()
-              generateQuestion()
+              setShowDifficultySelector(true)
             }}
             className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
