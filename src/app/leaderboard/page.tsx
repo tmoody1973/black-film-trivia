@@ -23,7 +23,7 @@ export default function LeaderboardPage() {
   const fetchLeaderboard = async () => {
     try {
       console.log('Fetching leaderboard...')
-      const response = await fetch('/api/leaderboard')
+      const response = await fetch('/api/scores')
       const data = await response.json()
       
       if (!response.ok) {

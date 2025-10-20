@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Anthropic } from '@anthropic-ai/sdk'
+import { randomUUID } from 'crypto'
+import { rateLimiter, RATE_LIMITS, getClientIdentifier } from '@/lib/rate-limit'
 
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
@@ -7,8 +9,50 @@ const anthropic = new Anthropic({
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const identifier = getClientIdentifier(request)
+    const { allowed, retryAfter } = rateLimiter.check(
+      identifier,
+      RATE_LIMITS.QUESTION_GENERATION.maxRequests,
+      RATE_LIMITS.QUESTION_GENERATION.windowMs
+    )
+
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter?.toString() || '60'
+          }
+        }
+      )
+    }
+
     const { movieTitle } = await request.json()
-    
+
+    // Input validation
+    if (!movieTitle || typeof movieTitle !== 'string') {
+      return NextResponse.json(
+        { error: 'Missing or invalid movieTitle' },
+        { status: 400 }
+      )
+    }
+
+    if (movieTitle.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'movieTitle cannot be empty' },
+        { status: 400 }
+      )
+    }
+
+    if (movieTitle.length > 200) {
+      return NextResponse.json(
+        { error: 'movieTitle too long (max 200 characters)' },
+        { status: 400 }
+      )
+    }
+
     console.log('Generating question for movie:', movieTitle)
 
     // Make both API calls in parallel
@@ -50,7 +94,7 @@ export async function POST(request: Request) {
     const questionData = JSON.parse(content.text)
     const response = NextResponse.json({
       ...questionData,
-      id: Math.random().toString(36).substring(7),
+      id: randomUUID(),
       posterUrl: movieData.Poster,
       director: movieData.Director,
       difficulty: 'medium'
@@ -61,9 +105,12 @@ export async function POST(request: Request) {
     return response
 
   } catch (error) {
+    // Log full error server-side for debugging
     console.error('Error generating question:', error)
+
+    // Return generic error to client (don't expose internal details)
     return NextResponse.json(
-      { error: 'Failed to generate question', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to generate question. Please try again.' },
       { status: 500 }
     )
   }
