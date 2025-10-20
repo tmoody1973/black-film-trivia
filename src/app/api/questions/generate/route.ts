@@ -2,10 +2,23 @@ import { NextResponse } from 'next/server'
 import { Anthropic } from '@anthropic-ai/sdk'
 import { randomUUID } from 'crypto'
 import { rateLimiter, RATE_LIMITS, getClientIdentifier } from '@/lib/rate-limit'
+import { adminDb } from '@/lib/firebase-admin'
+import { Timestamp } from 'firebase-admin/firestore'
 
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 })
+
+// Cache configuration
+const CACHE_TTL_HOURS = 24 // Cache questions for 24 hours
+const CACHE_COLLECTION = 'question_cache'
+
+/**
+ * Generate a cache key from movie title (normalized)
+ */
+function getCacheKey(movieTitle: string): string {
+  return movieTitle.toLowerCase().trim().replace(/[^a-z0-9]/g, '-')
+}
 
 export async function POST(request: Request) {
   try {
@@ -53,8 +66,31 @@ export async function POST(request: Request) {
       )
     }
 
-    console.log('Generating question for movie:', movieTitle)
+    // Check cache first
+    const cacheKey = getCacheKey(movieTitle)
+    const cacheRef = adminDb.collection(CACHE_COLLECTION).doc(cacheKey)
+    const cacheDoc = await cacheRef.get()
 
+    if (cacheDoc.exists) {
+      const cachedData = cacheDoc.data()
+      const expiresAt = cachedData?.expiresAt?.toDate()
+      const now = new Date()
+
+      // Return cached question if not expired
+      if (expiresAt && expiresAt > now) {
+        const cachedQuestion = {
+          ...cachedData?.question,
+          id: randomUUID(), // Generate new ID for each request to avoid duplicates
+        }
+
+        const response = NextResponse.json(cachedQuestion)
+        response.headers.set('X-Cache-Status', 'HIT')
+        response.headers.set('Cache-Control', 'public, max-age=3600')
+        return response
+      }
+    }
+
+    // Cache miss or expired - generate new question
     // Make both API calls in parallel
     const [omdbResponse, message] = await Promise.all([
       // OMDB API call
@@ -92,15 +128,34 @@ export async function POST(request: Request) {
     }
 
     const questionData = JSON.parse(content.text)
-    const response = NextResponse.json({
+    const fullQuestion = {
       ...questionData,
-      id: randomUUID(),
       posterUrl: movieData.Poster,
       director: movieData.Director,
       difficulty: 'medium'
+    }
+
+    // Store in cache (without ID - we'll generate fresh IDs on retrieval)
+    const now = Timestamp.now()
+    const expiresAt = Timestamp.fromDate(
+      new Date(Date.now() + CACHE_TTL_HOURS * 60 * 60 * 1000)
+    )
+
+    await cacheRef.set({
+      movieTitle,
+      question: fullQuestion,
+      createdAt: now,
+      expiresAt: expiresAt,
+    })
+
+    // Return question with unique ID
+    const response = NextResponse.json({
+      ...fullQuestion,
+      id: randomUUID(),
     })
 
     // Add caching headers
+    response.headers.set('X-Cache-Status', 'MISS')
     response.headers.set('Cache-Control', 'public, max-age=3600') // Cache for 1 hour
     return response
 

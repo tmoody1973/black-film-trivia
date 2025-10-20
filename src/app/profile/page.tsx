@@ -34,7 +34,6 @@ export default function ProfilePage() {
       await auth.signOut()
       setCurrentUser(null)
     } catch (error) {
-      console.error('Error signing out:', error)
       setError('Failed to sign out')
     }
   }
@@ -45,7 +44,6 @@ export default function ProfilePage() {
       await signInWithPopup(auth, provider)
       router.push('/')
     } catch (error) {
-      console.error('Error signing in with Google:', error)
       setError('Failed to sign in with Google')
     }
   }
@@ -86,7 +84,6 @@ export default function ProfilePage() {
       }
       router.push('/')
     } catch (error: any) {
-      console.error('Error with email auth:', error)
       // Handle specific sign-up errors
       if (error.code === 'auth/email-already-in-use') {
         setError('An account with this email already exists. Please sign in instead.')
@@ -114,7 +111,6 @@ export default function ProfilePage() {
       }
       router.push('/')
     } catch (error) {
-      console.error('Error signing in as guest:', error)
       setError('Failed to sign in as guest')
     }
   }

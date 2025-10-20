@@ -65,7 +65,6 @@ export default function PlayPage() {
       setAskedQuestions(data.askedQuestions || [])
       generateQuestion()
     } catch (error) {
-      console.error('Error loading asked questions:', error)
       setAskedQuestions([])
       generateQuestion()
     }
@@ -121,12 +120,10 @@ export default function PlayPage() {
           })
 
           if (!saveResponse.ok) {
-            const saveData = await saveResponse.json()
-            console.error('Failed to save questions:', saveData.error)
+            // Failed to save questions - already updated local state, so just continue
           }
         } catch (error) {
-          console.error('Error saving asked questions:', error)
-          // Already updated local state, so just continue
+          // Error saving asked questions - already updated local state, so just continue
         }
       }
 
@@ -136,7 +133,6 @@ export default function PlayPage() {
         setNextQuestion(data)
       }
     } catch (error) {
-      console.error('Error generating question:', error)
       setError(error instanceof Error ? error.message : 'Failed to generate question')
     } finally {
       setIsLoading(false)
@@ -179,7 +175,6 @@ export default function PlayPage() {
   const saveScore = async () => {
     const user = auth.currentUser
     if (!user) {
-      console.log('No user found, redirecting to profile')
       router.push('/profile')
       return
     }
@@ -191,8 +186,7 @@ export default function PlayPage() {
         score,
         streak,
       }
-      
-      console.log('Saving score:', scoreData)
+
       const response = await fetch('/api/scores', {
         method: 'POST',
         headers: {
@@ -202,16 +196,13 @@ export default function PlayPage() {
       })
 
       const data = await response.json()
-      console.log('Score save response:', data)
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to save score')
       }
 
-      console.log('Score saved successfully:', data.message)
       router.push('/leaderboard')
     } catch (error) {
-      console.error('Error saving score:', error)
       setError(error instanceof Error ? error.message : 'Failed to save score')
       // Still allow viewing the leaderboard even if save failed
       setTimeout(() => {

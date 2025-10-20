@@ -22,10 +22,9 @@ export default function LeaderboardPage() {
 
   const fetchLeaderboard = async () => {
     try {
-      console.log('Fetching leaderboard...')
       const response = await fetch('/api/scores')
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch leaderboard')
       }
@@ -36,10 +35,8 @@ export default function LeaderboardPage() {
         completedAt: new Date(entry.completedAt)
       }))
 
-      console.log('Leaderboard data:', processedData)
       setEntries(processedData)
     } catch (error) {
-      console.error('Error fetching leaderboard:', error)
       setError(error instanceof Error ? error.message : 'Failed to fetch leaderboard')
     } finally {
       setIsLoading(false)
