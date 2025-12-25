@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
+import { useUser, SignInButton } from '@clerk/nextjs'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { api } from '../../../convex/_generated/api'
@@ -18,10 +18,11 @@ import {
   type Difficulty as DifficultyType,
 } from '@/lib/constants'
 import { Question, LearningContent, ContentItem, ContentType } from '@/types/game'
-import { Trophy, Flame, Star, RotateCcw, Medal } from 'lucide-react'
+import { Trophy, Flame, Star, RotateCcw, Medal, LogIn } from 'lucide-react'
 
-// Session storage key for tracking asked questions
-const SESSION_ASKED_KEY = 'trivia_session_asked'
+// Session storage key for tracking asked questions - includes category for separation
+const getSessionKey = (category: string, theme: string) =>
+  `trivia_asked_${category}_${theme}`
 
 // Get content pool based on category and theme
 function getContentPool(category: ContentCategory, theme: string): ContentItem[] {
@@ -77,6 +78,9 @@ function PlayPageContent() {
   // Get the content pool for this game configuration
   const contentPool = getContentPool(category, theme)
 
+  // Session storage key specific to this game mode
+  const sessionKey = getSessionKey(category, theme)
+
   // Convex queries, mutations, and actions
   const askedQuestionsData = useQuery(api.questions.getAskedQuestions)
   const addAskedQuestion = useMutation(api.questions.addAskedQuestion)
@@ -98,30 +102,32 @@ function PlayPageContent() {
     resetGame,
   } = useGameStore()
 
-  // Load session-asked questions from sessionStorage on mount
+  // Load session-asked questions from sessionStorage on mount (category-specific)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem(SESSION_ASKED_KEY)
+      const stored = sessionStorage.getItem(sessionKey)
       if (stored) {
         try {
           setSessionAskedQuestions(JSON.parse(stored))
         } catch {
-          sessionStorage.removeItem(SESSION_ASKED_KEY)
+          sessionStorage.removeItem(sessionKey)
         }
       }
     }
-  }, [])
+  }, [sessionKey])
 
-  // Save session-asked questions to sessionStorage
-  const addToSessionAsked = useCallback((movieTitle: string) => {
+  // Save session-asked questions to sessionStorage (category-specific)
+  const addToSessionAsked = useCallback((contentTitle: string) => {
     setSessionAskedQuestions(prev => {
-      const updated = [...prev, movieTitle]
+      // Avoid duplicates
+      if (prev.includes(contentTitle)) return prev
+      const updated = [...prev, contentTitle]
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem(SESSION_ASKED_KEY, JSON.stringify(updated))
+        sessionStorage.setItem(sessionKey, JSON.stringify(updated))
       }
       return updated
     })
-  }, [])
+  }, [sessionKey])
 
   // Combine server-side asked questions with session state for comprehensive filtering
   const getAllAskedQuestions = useCallback(() => {
@@ -181,7 +187,7 @@ function PlayPageContent() {
 
       if (availableContent.length === 0) {
         // Clear session storage if we've exhausted all content
-        sessionStorage.removeItem(SESSION_ASKED_KEY)
+        sessionStorage.removeItem(sessionKey)
         setSessionAskedQuestions([])
       }
 
@@ -297,7 +303,7 @@ function PlayPageContent() {
     // Clear session asked questions for a fresh start
     setSessionAskedQuestions([])
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(SESSION_ASKED_KEY)
+      sessionStorage.removeItem(sessionKey)
     }
     setShowGameOverCelebration(false)
     hasInitialized.current = false
@@ -347,7 +353,58 @@ function PlayPageContent() {
     )
   }
 
-  if (!isUserLoaded || !currentQuestion || isLoading) {
+  // Show loading while checking auth
+  if (!isUserLoaded) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center space-y-6">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          className="size-20 rounded-full border-4 border-primary/30 border-t-primary"
+        />
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-muted-foreground font-display"
+        >
+          Loading...
+        </motion.p>
+      </div>
+    )
+  }
+
+  // Require authentication to play
+  if (!user) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center space-y-8 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card-geometric max-w-md p-8 text-center space-y-6"
+        >
+          <div className="size-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+            <LogIn className="size-10 text-primary" />
+          </div>
+          <h1 className="text-3xl font-display font-bold text-gradient-gold">Sign In to Play</h1>
+          <p className="text-muted-foreground">
+            Create an account or sign in to track your scores, compete on the leaderboard, and test your knowledge of Black cinema and literature!
+          </p>
+          <SignInButton mode="modal">
+            <button className="btn-geometric px-8 py-4 text-lg flex items-center justify-center gap-2 w-full">
+              <LogIn className="size-5" />
+              Sign In to Continue
+            </button>
+          </SignInButton>
+          <p className="text-sm text-muted-foreground">
+            Free to play • Track your progress • Compete globally
+          </p>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Show loading while generating question
+  if (!currentQuestion || isLoading) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center space-y-6">
         <motion.div
