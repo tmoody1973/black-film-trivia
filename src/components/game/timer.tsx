@@ -1,10 +1,13 @@
 "use client"
 
-import { useEffect } from 'react'
-import { useGameStore } from '@/store/game'
+// TODO: Implement timed mode in game store
+// import { useEffect } from 'react'
+// import { useGameStore } from '@/store/game'
 
 export function Timer() {
-  const { timeRemaining, setTimeRemaining, setGameOver, isGameOver } = useGameStore()
+  // Temporarily disabled - timed mode not yet implemented
+  return null;
+  // const { timeRemaining, setTimeRemaining, setGameOver, isGameOver } = useGameStore()
 
   useEffect(() => {
     if (isGameOver) return
