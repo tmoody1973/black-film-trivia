@@ -232,27 +232,31 @@ async function fetchFilmMetadata(
   }
 }
 
-// Fetch book metadata from Google Books
+// Fetch book metadata from Open Library (free, no API key required)
 async function fetchBookMetadata(
   title: string
 ): Promise<{ creator?: string; year?: string; posterUrl?: string; coverUrl?: string }> {
   try {
-    const response = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(title)}&maxResults=1`
-    );
+    // Search Open Library for the book
+    const searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=1`;
+    const response = await fetch(searchUrl);
     if (!response.ok) return {};
 
     const data = await response.json();
-    const book = data.items?.[0]?.volumeInfo;
+    const book = data.docs?.[0];
     if (!book) return {};
 
-    const coverUrl =
-      book.imageLinks?.thumbnail?.replace("http:", "https:") ||
-      book.imageLinks?.smallThumbnail?.replace("http:", "https:");
+    // Get cover URL using the cover ID (L = large, M = medium, S = small)
+    let coverUrl: string | undefined;
+    if (book.cover_i) {
+      coverUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`;
+    } else if (book.cover_edition_key) {
+      coverUrl = `https://covers.openlibrary.org/b/olid/${book.cover_edition_key}-L.jpg`;
+    }
 
     return {
-      creator: book.authors?.[0],
-      year: book.publishedDate?.split("-")[0],
+      creator: book.author_name?.[0],
+      year: book.first_publish_year?.toString(),
       coverUrl,
       posterUrl: coverUrl, // For compatibility
     };

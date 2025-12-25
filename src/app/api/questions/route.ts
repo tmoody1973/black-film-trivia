@@ -107,11 +107,11 @@ Return this exact JSON structure:
 
 // Generate question for a book
 async function generateBookQuestion(bookTitle: string, difficulty: Difficulty) {
-  // Fetch book data from Google Books API
-  const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(bookTitle)}&maxResults=1${process.env.GOOGLE_BOOKS_API_KEY ? `&key=${process.env.GOOGLE_BOOKS_API_KEY}` : ''}`
+  // Fetch book data from Open Library (free, no API key required)
+  const openLibraryUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(bookTitle)}&limit=1`
 
   const [booksResponse, perplexityResponse] = await Promise.all([
-    fetch(googleBooksUrl),
+    fetch(openLibraryUrl),
     fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -157,7 +157,21 @@ Return this exact JSON structure:
   let bookData = null
   if (booksResponse.ok) {
     const booksJson = await booksResponse.json()
-    bookData = booksJson.items?.[0]?.volumeInfo || null
+    const book = booksJson.docs?.[0]
+    if (book) {
+      // Get cover URL from Open Library
+      let coverUrl: string | null = null
+      if (book.cover_i) {
+        coverUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
+      } else if (book.cover_edition_key) {
+        coverUrl = `https://covers.openlibrary.org/b/olid/${book.cover_edition_key}-L.jpg`
+      }
+      bookData = {
+        authors: book.author_name,
+        publishedDate: book.first_publish_year?.toString(),
+        imageLinks: coverUrl ? { thumbnail: coverUrl } : null
+      }
+    }
   }
 
   if (!perplexityResponse.ok) {
