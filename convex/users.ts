@@ -121,10 +121,10 @@ export const getUserStats = query({
       .take(10);
 
     // Calculate accuracy
+    const totalQuestions = user.totalQuestionsAnswered ?? 0;
+    const totalCorrect = user.totalCorrectAnswers ?? 0;
     const accuracy =
-      user.totalQuestionsAnswered > 0
-        ? (user.totalCorrectAnswers! / user.totalQuestionsAnswered) * 100
-        : 0;
+      totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
 
     return {
       ...user,

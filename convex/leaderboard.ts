@@ -54,26 +54,33 @@ export const getTopScores = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
 
-    let leaderboardQuery = ctx.db.query("leaderboard");
-
-    // Apply filters
+    // Apply filters and get scores
+    let scores;
     if (args.difficulty) {
-      leaderboardQuery = leaderboardQuery.withIndex("by_difficulty", (q) =>
-        q.eq("difficulty", args.difficulty!)
-      );
+      scores = await ctx.db
+        .query("leaderboard")
+        .withIndex("by_difficulty", (q) => q.eq("difficulty", args.difficulty!))
+        .order("desc")
+        .take(limit);
     } else if (args.category) {
-      leaderboardQuery = leaderboardQuery.withIndex("by_category", (q) =>
-        q.eq("category", args.category!)
-      );
+      scores = await ctx.db
+        .query("leaderboard")
+        .withIndex("by_category", (q) => q.eq("category", args.category!))
+        .order("desc")
+        .take(limit);
     } else if (args.theme) {
-      leaderboardQuery = leaderboardQuery.withIndex("by_theme", (q) =>
-        q.eq("theme", args.theme!)
-      );
+      scores = await ctx.db
+        .query("leaderboard")
+        .withIndex("by_theme", (q) => q.eq("theme", args.theme!))
+        .order("desc")
+        .take(limit);
     } else {
-      leaderboardQuery = leaderboardQuery.withIndex("by_score");
+      scores = await ctx.db
+        .query("leaderboard")
+        .withIndex("by_score")
+        .order("desc")
+        .take(limit);
     }
-
-    const scores = await leaderboardQuery.order("desc").take(limit);
 
     return scores;
   },
