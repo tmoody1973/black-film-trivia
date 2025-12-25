@@ -43,6 +43,11 @@ const wouldSpoilAnswer = (questionText: string, infoType: 'creator' | 'year' | '
   return false
 }
 
+// Helper to normalize answers for comparison
+const normalizeAnswer = (answer: string) => answer.trim().toLowerCase()
+const isAnswerCorrect = (selected: string, correct: string) =>
+  normalizeAnswer(selected) === normalizeAnswer(correct)
+
 export function QuestionCard({ question, onAnswer, currentPoints, questionNumber }: QuestionCardProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [imageError, setImageError] = useState(false)
@@ -71,7 +76,8 @@ export function QuestionCard({ question, onAnswer, currentPoints, questionNumber
   const handleAnswer = (answer: string, event: React.MouseEvent) => {
     if (selectedAnswer) return
     setSelectedAnswer(answer)
-    const isCorrect = answer === question.answer
+    // Use normalized comparison to handle whitespace/case differences
+    const isCorrect = isAnswerCorrect(answer, question.answer)
 
     // Get click position for score popup
     const rect = (event.target as HTMLElement).getBoundingClientRect()
@@ -257,10 +263,10 @@ export function QuestionCard({ question, onAnswer, currentPoints, questionNumber
                 whileTap={selectedAnswer === null ? { scale: 0.98 } : {}}
                 className={`relative w-full rounded-lg border-2 p-4 text-left transition-all duration-300 overflow-hidden
                   ${selectedAnswer === option
-                    ? option === question.answer
+                    ? isAnswerCorrect(option, question.answer)
                       ? 'border-success bg-success/20 glow-success'
                       : 'border-destructive bg-destructive/20 glow-error'
-                    : selectedAnswer && option === question.answer
+                    : selectedAnswer && isAnswerCorrect(option, question.answer)
                     ? 'border-success bg-success/20 glow-success'
                     : 'border-border hover:border-primary/50 hover:bg-primary/5'
                   }
@@ -274,7 +280,7 @@ export function QuestionCard({ question, onAnswer, currentPoints, questionNumber
                     animate={{ scale: 4, opacity: 0 }}
                     transition={{ duration: 0.6 }}
                     className={`absolute inset-0 rounded-full ${
-                      option === question.answer ? 'bg-success' : 'bg-destructive'
+                      isAnswerCorrect(option, question.answer) ? 'bg-success' : 'bg-destructive'
                     }`}
                     style={{ transformOrigin: 'center' }}
                   />
@@ -283,7 +289,7 @@ export function QuestionCard({ question, onAnswer, currentPoints, questionNumber
                 <span className="relative z-10 flex items-center justify-between">
                   <span className="font-medium">{option}</span>
                   <AnimatePresence>
-                    {selectedAnswer && option === question.answer && (
+                    {selectedAnswer && isAnswerCorrect(option, question.answer) && (
                       <motion.span
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -298,7 +304,7 @@ export function QuestionCard({ question, onAnswer, currentPoints, questionNumber
                         Correct
                       </motion.span>
                     )}
-                    {selectedAnswer === option && option !== question.answer && (
+                    {selectedAnswer === option && !isAnswerCorrect(option, question.answer) && (
                       <motion.span
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}

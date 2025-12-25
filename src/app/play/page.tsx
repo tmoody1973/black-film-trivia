@@ -618,6 +618,7 @@ function PlayPageContent() {
         year={currentQuestion.year}
         learning={currentQuestion.learning || defaultLearning}
         wasCorrect={lastAnswerCorrect}
+        correctAnswer={currentQuestion.answer}
         onContinue={handleContinue}
       />
     </div>

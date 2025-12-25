@@ -22,6 +22,7 @@ interface KnowledgeRevealProps {
   year?: string
   learning: LearningContent
   wasCorrect: boolean
+  correctAnswer?: string
   onContinue: () => void
 }
 
@@ -34,6 +35,7 @@ export function KnowledgeReveal({
   year,
   learning,
   wasCorrect,
+  correctAnswer,
   onContinue,
 }: KnowledgeRevealProps) {
   const isBook = contentType === 'book'
@@ -110,6 +112,19 @@ export function KnowledgeReveal({
                       </>
                     )}
                   </motion.div>
+
+                  {/* Show correct answer for wrong answers */}
+                  {!wasCorrect && correctAnswer && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 }}
+                      className="mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/30"
+                    >
+                      <p className="text-sm text-muted-foreground mb-1">The correct answer was:</p>
+                      <p className="font-display font-bold text-lg text-foreground">{correctAnswer}</p>
+                    </motion.div>
+                  )}
 
                   <motion.h2
                     initial={{ opacity: 0, x: -10 }}
