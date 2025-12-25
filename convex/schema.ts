@@ -163,4 +163,113 @@ export default defineSchema({
     .index("by_content", ["contentTitle", "contentType", "difficulty"])
     .index("by_contentTitle", ["contentTitle"])
     .index("by_createdAt", ["createdAt"]),
+
+  // User Library - saved films and books
+  user_library: defineTable({
+    userId: v.string(),
+    contentTitle: v.string(),
+    contentType: v.string(), // 'film' | 'book'
+    creator: v.optional(v.string()),
+    year: v.optional(v.string()),
+    posterUrl: v.optional(v.string()),
+    savedAt: v.number(),
+    notes: v.optional(v.string()),
+    status: v.string(), // 'want_to_watch' | 'watched' | 'want_to_read' | 'read'
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_type", ["userId", "contentType"])
+    .index("by_userId_content", ["userId", "contentTitle"]),
+
+  // Daily Challenges - one per day, same for all users
+  daily_challenges: defineTable({
+    challengeDate: v.string(), // "2025-01-15" (UTC)
+    challengeNumber: v.number(), // Daily #1, #2, etc.
+    questions: v.array(
+      v.object({
+        contentTitle: v.string(),
+        contentType: v.string(), // 'film' | 'book'
+        questionCacheId: v.optional(v.id("question_cache")),
+      })
+    ),
+    difficulty: v.string(), // 'medium' for fairness
+    totalAttempts: v.number(),
+    averageScore: v.number(),
+    perfectScores: v.number(),
+    isArchived: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_date", ["challengeDate"])
+    .index("by_number", ["challengeNumber"]),
+
+  // Daily Challenge Attempts - user attempts on daily challenges
+  daily_attempts: defineTable({
+    userId: v.string(),
+    challengeDate: v.string(),
+    challengeNumber: v.number(),
+    score: v.number(),
+    maxStreak: v.number(),
+    correctAnswers: v.number(),
+    questionResults: v.array(
+      v.object({
+        questionIndex: v.number(),
+        correct: v.boolean(),
+        timeSpent: v.optional(v.number()),
+      })
+    ),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    status: v.string(), // 'in_progress' | 'completed'
+  })
+    .index("by_userId_date", ["userId", "challengeDate"])
+    .index("by_date_score", ["challengeDate", "score"])
+    .index("by_userId", ["userId"]),
+
+  // Daily Streaks - tracks consecutive days played
+  daily_streaks: defineTable({
+    userId: v.string(),
+    currentStreak: v.number(),
+    longestStreak: v.number(),
+    lastPlayedDate: v.string(),
+    totalDaysPlayed: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_currentStreak", ["currentStreak"]),
+
+  // Era Progress - Time Machine mode progress tracking
+  era_progress: defineTable({
+    userId: v.string(),
+    era: v.string(), // "1960s-70s" | "1980s" | "1990s" | "2000s" | "2010s" | "2020s"
+    highScore: v.number(),
+    gamesPlayed: v.number(),
+    questionsAnswered: v.number(),
+    correctAnswers: v.number(),
+    masteryLevel: v.string(), // "novice" | "fan" | "expert" | "scholar"
+    lastPlayedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_era", ["userId", "era"])
+    .index("by_era_highScore", ["era", "highScore"]),
+
+  // Era Game Sessions - individual Time Machine game sessions
+  era_sessions: defineTable({
+    userId: v.string(),
+    era: v.string(),
+    score: v.number(),
+    correctAnswers: v.number(),
+    maxStreak: v.number(),
+    questionResults: v.array(
+      v.object({
+        contentTitle: v.string(),
+        contentType: v.string(),
+        correct: v.boolean(),
+        timeSpent: v.optional(v.number()),
+      })
+    ),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    status: v.string(), // 'in_progress' | 'completed'
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_era", ["userId", "era"])
+    .index("by_era_score", ["era", "score"]),
 });

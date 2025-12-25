@@ -197,8 +197,7 @@ Return this exact JSON structure:
   // Extract author from Google Books or use Perplexity data
   const author = bookData?.authors?.[0] || null
   const publishedDate = bookData?.publishedDate || null
-  const coverUrl = bookData?.imageLinks?.thumbnail?.replace('http:', 'https:') ||
-                   bookData?.imageLinks?.smallThumbnail?.replace('http:', 'https:') || null
+  const coverUrl = bookData?.imageLinks?.thumbnail?.replace('http:', 'https:') || null
 
   const learning = questionData.learning || {
     didYouKnow: `"${bookTitle}" is a notable work in Black literature.`,

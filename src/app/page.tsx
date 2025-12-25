@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { SignInButton } from "@clerk/nextjs";
 import { Authenticated, Unauthenticated, useConvexAuth } from "convex/react";
-import { Film, Book, Sparkles, Trophy, Users, Zap } from "lucide-react";
+import { Film, Book, Sparkles, Trophy, Zap, Calendar, Clock, Heart, Play } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -153,8 +153,118 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* Game Modes Section */}
+      <section className="border-t bg-muted/30 px-4 py-16">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="mb-12 text-center"
+          >
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              Choose Your Adventure
+            </h2>
+            <p className="mx-auto max-w-2xl text-muted-foreground">
+              Multiple ways to test and expand your knowledge of Black cinema and literature.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* Classic Mode */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              onClick={() => router.push("/game-setup")}
+              className="group cursor-pointer rounded-xl border-2 border-primary/20 bg-card p-6 transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-primary/10 p-3">
+                <Play className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Classic Mode</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Customize your trivia experience with films, books, or both.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+                Play Now
+                <Sparkles className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Daily Challenge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              onClick={() => router.push("/daily")}
+              className="group cursor-pointer rounded-xl border-2 border-accent/20 bg-card p-6 transition-all hover:border-accent hover:shadow-lg hover:shadow-accent/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-accent/10 p-3">
+                <Calendar className="h-6 w-6 text-accent" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Daily Challenge</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                10 questions everyone plays. New challenge every day!
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-accent">
+                Today&apos;s Challenge
+                <Zap className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Time Machine */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              onClick={() => router.push("/time-machine")}
+              className="group cursor-pointer rounded-xl border-2 border-secondary/20 bg-card p-6 transition-all hover:border-secondary hover:shadow-lg hover:shadow-secondary/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-secondary/10 p-3">
+                <Clock className="h-6 w-6 text-secondary" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Time Machine</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Explore Black cinema & literature through different eras.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-secondary">
+                Travel Through Time
+                <Sparkles className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* My Library */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              onClick={() => router.push("/library")}
+              className="group cursor-pointer rounded-xl border-2 border-tertiary/20 bg-card p-6 transition-all hover:border-tertiary hover:shadow-lg hover:shadow-tertiary/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-tertiary/10 p-3">
+                <Heart className="h-6 w-6 text-tertiary" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">My Library</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Save films and books to explore later.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-tertiary">
+                View Saved
+                <Heart className="h-3 w-3" />
+              </span>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="border-t bg-muted/30 px-4 py-20">
+      <section className="border-t px-4 py-20">
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

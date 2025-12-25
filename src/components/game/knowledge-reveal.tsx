@@ -2,8 +2,10 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { Sparkles, Award, BookOpen, User, Star, Film } from 'lucide-react'
+import { Sparkles, Award, BookOpen, User, Star } from 'lucide-react'
 import type { ContentType } from '@/types/game'
+import { SaveToLibraryButton } from './save-to-library-button'
+import { PurchaseLinks } from './purchase-links'
 
 interface LearningContent {
   didYouKnow: string
@@ -113,16 +115,16 @@ export function KnowledgeReveal({
                     )}
                   </motion.div>
 
-                  {/* Show correct answer for wrong answers */}
+                  {/* Show correct answer for wrong answers - more prominent */}
                   {!wasCorrect && correctAnswer && (
                     <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.35 }}
-                      className="mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/30"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring" }}
+                      className="mt-4 p-4 rounded-lg bg-destructive/15 border-2 border-destructive/40"
                     >
-                      <p className="text-sm text-muted-foreground mb-1">The correct answer was:</p>
-                      <p className="font-display font-bold text-lg text-foreground">{correctAnswer}</p>
+                      <p className="text-sm text-destructive/80 font-medium mb-1">The correct answer was:</p>
+                      <p className="font-display font-bold text-xl text-destructive">{correctAnswer}</p>
                     </motion.div>
                   )}
 
@@ -147,6 +149,22 @@ export function KnowledgeReveal({
                       {year && <span>{year}</span>}
                     </motion.p>
                   )}
+
+                  {/* Save to Library button */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="pt-2"
+                  >
+                    <SaveToLibraryButton
+                      contentTitle={contentTitle}
+                      contentType={contentType}
+                      creator={creator}
+                      year={year}
+                      posterUrl={posterUrl}
+                    />
+                  </motion.div>
                 </div>
               </motion.div>
 
@@ -238,6 +256,19 @@ export function KnowledgeReveal({
                 <p className="text-foreground/90 leading-relaxed pl-7">
                   {learning.legacy}
                 </p>
+              </motion.div>
+
+              {/* Purchase Links */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.95 }}
+              >
+                <PurchaseLinks
+                  contentTitle={contentTitle}
+                  contentType={contentType}
+                  creator={creator}
+                />
               </motion.div>
 
               {/* Continue Button */}

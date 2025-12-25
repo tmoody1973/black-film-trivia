@@ -335,7 +335,7 @@ export function QuestionCard({ question, onAnswer, currentPoints, questionNumber
                 animate={{ scale: 1 }}
                 className="text-lg font-display font-semibold"
               >
-                {selectedAnswer === question.answer ? (
+                {selectedAnswer && isAnswerCorrect(selectedAnswer, question.answer) ? (
                   <motion.span
                     animate={{ color: ['hsl(var(--success))', 'hsl(var(--primary))', 'hsl(var(--success))'] }}
                     transition={{ duration: 2, repeat: Infinity }}
