@@ -8,7 +8,10 @@
  * @module
  */
 
+import type * as generateQuestion from "../generateQuestion.js";
 import type * as leaderboard from "../leaderboard.js";
+import type * as questionCache from "../questionCache.js";
+import type * as questions from "../questions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -18,7 +21,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  generateQuestion: typeof generateQuestion;
   leaderboard: typeof leaderboard;
+  questionCache: typeof questionCache;
+  questions: typeof questions;
   users: typeof users;
 }>;
 

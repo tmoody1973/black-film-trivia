@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { LeaderboardEntry } from '@/types/game'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 
-function formatDate(date: Date) {
-  return new Date(date).toLocaleDateString('en-US', {
+function formatDate(timestamp: number) {
+  return new Date(timestamp).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
@@ -12,58 +12,13 @@ function formatDate(date: Date) {
 }
 
 export default function LeaderboardPage() {
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetchLeaderboard()
-  }, [])
-
-  const fetchLeaderboard = async () => {
-    try {
-      console.log('Fetching leaderboard...')
-      const response = await fetch('/api/leaderboard')
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch leaderboard')
-      }
-
-      // Process dates consistently
-      const processedData = data.map((entry: LeaderboardEntry) => ({
-        ...entry,
-        completedAt: new Date(entry.completedAt)
-      }))
-
-      console.log('Leaderboard data:', processedData)
-      setEntries(processedData)
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error)
-      setError(error instanceof Error ? error.message : 'Failed to fetch leaderboard')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const entries = useQuery(api.leaderboard.getTopScores, { limit: 100 })
+  const isLoading = entries === undefined
 
   if (isLoading) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
         <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center space-y-4">
-        <p className="text-destructive">{error}</p>
-        <button
-          onClick={fetchLeaderboard}
-          className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-        >
-          Try Again
-        </button>
       </div>
     )
   }
@@ -81,7 +36,7 @@ export default function LeaderboardPage() {
         </div>
         {entries.map((entry, index) => (
           <div
-            key={entry.id}
+            key={entry._id}
             className="grid grid-cols-5 gap-4 border-b p-4 last:border-0"
           >
             <div>{index + 1}</div>
@@ -99,4 +54,4 @@ export default function LeaderboardPage() {
       </div>
     </div>
   )
-} 
+}

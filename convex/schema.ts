@@ -132,4 +132,35 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_achievementId", ["achievementId"]),
+
+  // Question cache - stores pre-generated questions for fast retrieval
+  question_cache: defineTable({
+    contentTitle: v.string(),
+    contentType: v.string(), // 'film' | 'book'
+    difficulty: v.string(), // 'easy' | 'medium' | 'hard'
+    // Question data
+    question: v.string(),
+    options: v.array(v.string()),
+    answer: v.string(),
+    plot: v.optional(v.string()),
+    // Metadata
+    creator: v.optional(v.string()), // director or author
+    year: v.optional(v.string()),
+    posterUrl: v.optional(v.string()),
+    coverUrl: v.optional(v.string()),
+    // Learning content
+    learning: v.optional(v.object({
+      didYouKnow: v.string(),
+      culturalContext: v.string(),
+      creatorSpotlight: v.string(),
+      awards: v.optional(v.array(v.string())),
+      legacy: v.string(),
+    })),
+    // Cache metadata
+    createdAt: v.number(),
+    usageCount: v.number(),
+  })
+    .index("by_content", ["contentTitle", "contentType", "difficulty"])
+    .index("by_contentTitle", ["contentTitle"])
+    .index("by_createdAt", ["createdAt"]),
 });

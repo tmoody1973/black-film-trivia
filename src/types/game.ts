@@ -1,12 +1,38 @@
+// Content type definitions
+export type ContentCategory = 'films' | 'books' | 'mixed'
+export type ContentType = 'film' | 'book'
+export type Difficulty = 'middle_school' | 'high_school' | 'easy' | 'medium' | 'hard'
+
+export interface GameConfig {
+  category: ContentCategory
+  theme: string // 'all' or theme id
+  difficulty: Difficulty
+}
+
+export interface LearningContent {
+  didYouKnow: string
+  culturalContext: string
+  creatorSpotlight: string
+  awards?: string[]
+  legacy: string
+}
+
 export interface Question {
   id: string
   question: string
   options: string[]
   answer: string
-  movieTitle: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  posterUrl?: string
-  plot?: string
+  contentTitle: string       // Generic title (film or book)
+  contentType: ContentType   // 'film' or 'book'
+  difficulty: Difficulty
+  posterUrl?: string         // For films (from OMDB)
+  coverUrl?: string          // For books (from Google Books)
+  plot?: string              // Synopsis/description
+  creator?: string           // Director for films, Author for books
+  year?: string
+  learning?: LearningContent
+  // Legacy support - deprecated, use contentTitle/creator
+  movieTitle?: string
   director?: string
 }
 
@@ -24,6 +50,12 @@ export interface Movie {
   director: string
   year: number
   posterUrl: string
+}
+
+// Content item for selection pool
+export interface ContentItem {
+  title: string
+  type: ContentType
 }
 
 export interface GameState {

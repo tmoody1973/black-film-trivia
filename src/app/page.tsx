@@ -117,7 +117,7 @@ export default function Home() {
           >
             <Authenticated>
               <motion.button
-                onClick={() => router.push("/play")}
+                onClick={() => router.push("/game-setup")}
                 className="button-gradient group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg px-8 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -167,7 +167,7 @@ export default function Home() {
               Why Play Black Cultural Trivia?
             </h2>
             <p className="mx-auto max-w-2xl text-muted-foreground">
-              More than just a game—it's an educational journey through Black
+              More than just a game—it&apos;s an educational journey through Black
               excellence in arts and literature.
             </p>
           </motion.div>

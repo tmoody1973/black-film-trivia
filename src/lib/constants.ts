@@ -1,22 +1,74 @@
-export const BLACK_DIRECTED_MOVIES = [
-  "Do the Right Thing", "Moonlight", "Get Out", "Boyz n the Hood", "Fruitvale Station",
-  "Selma", "Black Panther", "12 Years a Slave", "Malcolm X", "Creed",
-  "Straight Outta Compton", "Us", "Fences", "Precious", "Daughters of the Dust",
-  "Pariah", "Killer of Sheep", "Eve's Bayou", "Menace II Society", "Love & Basketball",
-  "Waiting to Exhale", "Set It Off", "Friday", "Crooklyn", "Juice",
-  "The Last Black Man in San Francisco", "Mudbound", "If Beale Street Could Talk", "Dope", "Bessie",
-  "Bamboozled", "Belly", "Clockers", "Chi-Raq", "Da 5 Bloods",
-  "Shaft", "Candyman", "Soul Food", "The Best Man", "Higher Learning",
-  "Poetic Justice", "New Jack City", "Boomerang", "Just Mercy", "Queen & Slim",
-  "The Wood", "Brown Sugar", "Hustle & Flow", "Talk to Me", "Akeelah and the Bee",
-  "Drumline", "ATL", "Paid in Full", "The Inevitable Defeat of Mister & Pete", "Middle of Nowhere",
-  "Beyond the Lights", "The Secret Life of Bees", "Jumping the Broom", "Cadillac Records", "Southside with You",
-  "The Photograph", "The Forty-Year-Old Version", "Miss Juneteenth", "Night Catches Us", "Atlantics",
-  "Girlhood", "Rocks", "The Last Tree", "Rafiki", "Farming",
-  "Noughts + Crosses", "The Boy Who Harnessed the Wind", "Queen of Katwe", "Beasts of No Nation", "Tsotsi",
-  "Atlantique", "Yeelen", "Touki Bouki", "Black Girl", "Hyenas",
-  "Moolaadé", "Bamako", "Timbuktu", "Félicité", "I Am Not a Witch",
-  "Vaya", "Inxeba (The Wound)", "Kati Kati", "Supa Modo", "Rafiki",
-  "Yardie", "The Kitchen", "Clemency", "The Burial of Kojo", "Eyimofe (This Is My Desire)",
-  "Residue", "Nine Days", "Zola", "Passing", "The Harder They Fall"
-] 
+// Re-export all content constants
+export { BLACK_DIRECTED_MOVIES, type BlackDirectedMovie } from './content/films'
+export { BLACK_AUTHORED_BOOKS, type BlackAuthoredBook } from './content/books'
+export {
+  THEMES,
+  THEME_CONTENT_MAP,
+  getThemesForContentType,
+  getThemeContentCount,
+  type Theme,
+} from './content/themes'
+
+// Content type definitions
+export type ContentCategory = 'films' | 'books' | 'mixed'
+export type ContentType = 'film' | 'book'
+export type Difficulty = 'middle_school' | 'high_school' | 'easy' | 'medium' | 'hard'
+
+// Difficulty metadata for UI
+export const DIFFICULTY_CONFIG = {
+  middle_school: {
+    label: 'Middle School',
+    description: 'Ages 11-14, basic plot and character questions',
+    icon: 'GraduationCap',
+    ageRange: '11-14',
+  },
+  high_school: {
+    label: 'High School',
+    description: 'Ages 14-18, themes and cultural context',
+    icon: 'School',
+    ageRange: '14-18',
+  },
+  easy: {
+    label: 'Easy',
+    description: 'More time, helpful hints',
+    icon: 'Clock',
+    ageRange: 'All ages',
+  },
+  medium: {
+    label: 'Medium',
+    description: 'Standard challenge',
+    icon: 'Flame',
+    ageRange: 'All ages',
+  },
+  hard: {
+    label: 'Hard',
+    description: 'Expert level trivia',
+    icon: 'Zap',
+    ageRange: 'All ages',
+  },
+} as const
+
+// Game configuration
+export interface GameConfig {
+  category: ContentCategory
+  theme: string // 'all' or theme id
+  difficulty: Difficulty
+}
+
+// Content item for selection
+export interface ContentItem {
+  title: string
+  type: ContentType
+}
+
+// Get content counts
+export const getContentCounts = () => {
+  const { BLACK_DIRECTED_MOVIES } = require('./content/films')
+  const { BLACK_AUTHORED_BOOKS } = require('./content/books')
+
+  return {
+    films: BLACK_DIRECTED_MOVIES.length,
+    books: BLACK_AUTHORED_BOOKS.length,
+    total: BLACK_DIRECTED_MOVIES.length + BLACK_AUTHORED_BOOKS.length,
+  }
+}

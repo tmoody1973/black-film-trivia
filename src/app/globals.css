@@ -1,83 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
-    
-    --card: 120 40% 98%;
-    --card-foreground: 0 0% 0%;
-    
-    --popover: 120 40% 98%;
-    --popover-foreground: 0 0% 0%;
-    
-    --primary: 0 72% 35%;  /* Deep red */
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 120 45% 35%;  /* Rich green */
-    --secondary-foreground: 0 0% 100%;
-    
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    
-    --accent: 0 72% 45%;  /* Brighter red */
-    --accent-foreground: 0 0% 100%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    /* Afrofuturistic Adinkra Color Palette - Light Mode */
+    --background: 40 20% 96%;           /* Warm cream */
+    --foreground: 25 30% 15%;           /* Deep brown-black */
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 72% 35%;
+    --card: 40 25% 92%;                 /* Warm light card */
+    --card-foreground: 25 30% 15%;
 
-    --radius: 0.5rem;
+    --popover: 40 25% 92%;
+    --popover-foreground: 25 30% 15%;
+
+    /* Primary: Royal Gold */
+    --primary: 43 96% 56%;              /* #F5A623 - Warm gold */
+    --primary-foreground: 25 30% 10%;
+
+    /* Secondary: Forest Green */
+    --secondary: 145 63% 32%;           /* #1E7B46 - Deep green */
+    --secondary-foreground: 40 30% 95%;
+
+    --muted: 35 15% 85%;
+    --muted-foreground: 25 20% 40%;
+
+    /* Accent: Terracotta */
+    --accent: 15 75% 55%;               /* #D4683A - Warm copper */
+    --accent-foreground: 40 30% 95%;
+
+    /* Success: Vibrant Green */
+    --success: 145 70% 42%;
+    --success-foreground: 40 30% 95%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 40 30% 95%;
+
+    --border: 35 30% 80%;
+    --input: 35 30% 85%;
+    --ring: 43 96% 56%;
+
+    --radius: 0.625rem;
+
+    /* Tertiary: Deep Brown */
+    --tertiary: 25 50% 25%;             /* #5C3D2E - Rich brown */
   }
- 
-  .dark {
-    --background: 0 0% 7%;  /* Near black */
-    --foreground: 0 0% 98%;
-    
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
-    
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
-    
-    --primary: 0 72% 45%;  /* Brighter red */
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 120 45% 45%;  /* Brighter green */
-    --secondary-foreground: 0 0% 100%;
-    
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-    
-    --accent: 120 45% 45%;  /* Green accent */
-    --accent-foreground: 0 0% 100%;
-    
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 72% 45%;
+  .dark {
+    /* Afrofuturistic Adinkra Color Palette - Dark Mode */
+    --background: 30 20% 8%;            /* Near black with warmth */
+    --foreground: 40 30% 95%;           /* Warm off-white */
+
+    --card: 35 15% 12%;                 /* Dark with gold tint */
+    --card-foreground: 40 30% 95%;
+
+    --popover: 35 15% 12%;
+    --popover-foreground: 40 30% 95%;
+
+    /* Primary: Royal Gold */
+    --primary: 43 96% 56%;              /* #F5A623 - Warm gold */
+    --primary-foreground: 25 30% 10%;
+
+    /* Secondary: Forest Green */
+    --secondary: 145 63% 42%;           /* Brighter green for dark mode */
+    --secondary-foreground: 40 30% 95%;
+
+    --muted: 30 15% 18%;
+    --muted-foreground: 35 20% 65%;
+
+    /* Accent: Terracotta */
+    --accent: 15 75% 55%;               /* #D4683A - Warm copper */
+    --accent-foreground: 40 30% 95%;
+
+    /* Success: Vibrant Green */
+    --success: 145 70% 45%;
+    --success-foreground: 25 30% 10%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 40 30% 95%;
+
+    --border: 43 50% 25%;               /* Gold-tinted borders */
+    --input: 35 20% 18%;
+    --ring: 43 96% 56%;
+
+    /* Tertiary: Deep Brown */
+    --tertiary: 25 50% 35%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+
   body {
-    @apply bg-gradient-to-br from-background via-background to-secondary/5;
+    @apply bg-background text-foreground;
     @apply min-h-screen;
+    background-image:
+      radial-gradient(ellipse at top, hsl(var(--primary) / 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, hsl(var(--secondary) / 0.05) 0%, transparent 50%);
   }
-  .card-gradient {
-    @apply bg-gradient-to-br from-card via-card to-secondary/5;
+}
+
+@layer components {
+  /* Geometric card with gold border accent */
+  .card-geometric {
+    @apply relative overflow-hidden rounded-lg border-2 border-primary/30;
+    @apply bg-card;
+    background-image:
+      linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, transparent 50%);
   }
-  .button-gradient {
-    @apply bg-gradient-to-r from-primary via-primary to-secondary hover:from-primary/90 hover:to-secondary/90;
+
+  .card-geometric::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-secondary;
   }
-} 
+
+  /* Adinkra pattern overlay - subtle geometric background */
+  .adinkra-pattern {
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        hsl(var(--primary) / 0.03) 0px,
+        hsl(var(--primary) / 0.03) 2px,
+        transparent 2px,
+        transparent 10px
+      );
+  }
+
+  /* Gold glow effect */
+  .glow-gold {
+    box-shadow:
+      0 0 20px hsl(var(--primary) / 0.3),
+      0 0 40px hsl(var(--primary) / 0.2),
+      0 0 60px hsl(var(--primary) / 0.1);
+  }
+
+  /* Success glow */
+  .glow-success {
+    box-shadow:
+      0 0 20px hsl(var(--success) / 0.4),
+      0 0 40px hsl(var(--success) / 0.2);
+  }
+
+  /* Destructive glow */
+  .glow-error {
+    box-shadow:
+      0 0 20px hsl(var(--destructive) / 0.4),
+      0 0 40px hsl(var(--destructive) / 0.2);
+  }
+
+  /* Gradient text utility */
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+  }
+
+  .text-gradient-earth {
+    @apply bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent;
+  }
+
+  /* Geometric button style */
+  .btn-geometric {
+    @apply relative overflow-hidden;
+    @apply bg-primary text-primary-foreground;
+    @apply px-6 py-3 font-semibold;
+    @apply transition-all duration-300;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .btn-geometric:hover {
+    @apply scale-105;
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.4);
+  }
+
+  /* Kente stripe accent */
+  .kente-stripe {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary)) 25%,
+      hsl(var(--secondary)) 25%,
+      hsl(var(--secondary)) 50%,
+      hsl(var(--accent)) 50%,
+      hsl(var(--accent)) 75%,
+      hsl(var(--tertiary)) 75%,
+      hsl(var(--tertiary)) 100%
+    );
+  }
+
+  /* Animated pulse for buttons */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px hsl(var(--primary) / 0.5);
+    }
+  }
+
+  /* Shake animation for wrong answers */
+  .shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+
+  /* Score pop animation */
+  .score-pop {
+    animation: scorePop 0.6s ease-out;
+  }
+
+  @keyframes scorePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  /* Float up animation for +10 points */
+  .float-up {
+    animation: floatUp 1s ease-out forwards;
+  }
+
+  @keyframes floatUp {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+  }
+}
