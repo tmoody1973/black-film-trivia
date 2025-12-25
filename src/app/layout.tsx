@@ -6,6 +6,7 @@ import ConvexClientProvider from '@/components/ConvexClientProvider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navigation } from '@/components/navigation'
 import { GoogleAnalytics } from '@/components/google-analytics'
+import { UserSync } from '@/components/user-sync'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,6 +25,7 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className} suppressHydrationWarning>
           <ConvexClientProvider>
+            <UserSync />
             <GoogleAnalytics />
             <ThemeProvider
               attribute="class"
