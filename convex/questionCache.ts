@@ -65,3 +65,27 @@ export const incrementUsage = internalMutation({
     }
   },
 });
+
+// Internal query to get cache statistics
+export const getCacheStats = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const allCached = await ctx.db.query("question_cache").collect();
+
+    const filmCount = allCached.filter((q) => q.contentType === "film").length;
+    const bookCount = allCached.filter((q) => q.contentType === "book").length;
+
+    const byDifficulty = {
+      easy: allCached.filter((q) => q.difficulty === "easy").length,
+      medium: allCached.filter((q) => q.difficulty === "medium").length,
+      hard: allCached.filter((q) => q.difficulty === "hard").length,
+    };
+
+    return {
+      total: allCached.length,
+      films: filmCount,
+      books: bookCount,
+      byDifficulty,
+    };
+  },
+});
