@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ExternalLink, ShoppingCart, Tv, BookOpen, Library } from "lucide-react"
+import { ExternalLink, ShoppingCart, Tv, BookOpen, Library, Music, Disc, Globe } from "lucide-react"
 import type { ContentType } from "@/types/game"
 
 interface PurchaseLinksProps {
@@ -84,9 +84,48 @@ const bookLinks: LinkConfig[] = [
   },
 ]
 
+// Music streaming/info links
+const musicLinks: LinkConfig[] = [
+  {
+    name: "Spotify",
+    icon: <Music className="size-4" />,
+    getUrl: (title) => `https://open.spotify.com/search/${encodeURIComponent(title)}`,
+    color: "text-green-600",
+    bgColor: "bg-green-50 hover:bg-green-100 dark:bg-green-950/30 dark:hover:bg-green-950/50",
+  },
+  {
+    name: "Apple Music",
+    icon: <Music className="size-4" />,
+    getUrl: (title) => `https://music.apple.com/us/search?term=${encodeURIComponent(title)}`,
+    color: "text-pink-600",
+    bgColor: "bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/30 dark:hover:bg-pink-950/50",
+  },
+  {
+    name: "YouTube Music",
+    icon: <Music className="size-4" />,
+    getUrl: (title) => `https://music.youtube.com/search?q=${encodeURIComponent(title)}`,
+    color: "text-red-600",
+    bgColor: "bg-red-50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50",
+  },
+  {
+    name: "Discogs",
+    icon: <Disc className="size-4" />,
+    getUrl: (title) => `https://www.discogs.com/search/?q=${encodeURIComponent(title)}&type=artist`,
+    color: "text-gray-700 dark:text-gray-300",
+    bgColor: "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700",
+  },
+  {
+    name: "Wikipedia",
+    icon: <Globe className="size-4" />,
+    getUrl: (title) => `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(title)}`,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/30 dark:hover:bg-blue-950/50",
+  },
+]
+
 export function PurchaseLinks({ contentTitle, contentType, creator }: PurchaseLinksProps) {
-  const links = contentType === "book" ? bookLinks : filmLinks
-  const heading = contentType === "book" ? "Where to Read" : "Where to Watch"
+  const links = contentType === "book" ? bookLinks : contentType === "music" ? musicLinks : filmLinks
+  const heading = contentType === "book" ? "Where to Read" : contentType === "music" ? "Where to Listen" : "Where to Watch"
 
   return (
     <div className="space-y-3">

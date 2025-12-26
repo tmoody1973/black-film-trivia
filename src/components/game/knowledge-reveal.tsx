@@ -41,7 +41,8 @@ export function KnowledgeReveal({
   onContinue,
 }: KnowledgeRevealProps) {
   const isBook = contentType === 'book'
-  const creatorLabel = isBook ? 'Written by' : 'Directed by'
+  const isMusic = contentType === 'music'
+  const creatorLabel = isMusic ? 'Artist' : isBook ? 'Written by' : 'Directed by'
   return (
     <AnimatePresence>
       {isVisible && (
