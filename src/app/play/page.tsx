@@ -226,6 +226,31 @@ function PlayPageContent() {
     generateQuestionWithFilter(getAllAskedQuestions())
   }, [getAllAskedQuestions])
 
+  // PREFETCH: Start loading the next question immediately when current question is displayed
+  // This ensures zero wait time between questions
+  const isPrefetching = useRef(false)
+  useEffect(() => {
+    // Only prefetch if:
+    // 1. We have a current question
+    // 2. We don't have a next question ready
+    // 3. We're not already prefetching
+    // 4. Game is not over
+    // 5. We haven't answered all 10 questions yet
+    if (
+      currentQuestion &&
+      !nextQuestion &&
+      !isPrefetching.current &&
+      !isGameOver &&
+      questionsAnswered < 9 // Don't prefetch for the 10th question (nothing after it)
+    ) {
+      isPrefetching.current = true
+      console.log('Prefetching next question while user answers...')
+      generateQuestionWithFilter(getAllAskedQuestions()).finally(() => {
+        isPrefetching.current = false
+      })
+    }
+  }, [currentQuestion, nextQuestion, isGameOver, questionsAnswered])
+
   const handleAnswer = async (isCorrect: boolean) => {
     setLastAnswerCorrect(isCorrect)
 
@@ -264,14 +289,16 @@ function PlayPageContent() {
       return
     }
 
-    // If we have a preloaded question, use it and generate the next one
+    // If we have a preloaded question, use it immediately
+    // The prefetch effect will automatically start loading the next one
     if (nextQuestion) {
       setTimeout(() => {
         setCurrentQuestion(nextQuestion)
         setNextQuestion(null)
-        generateQuestionWithFilter(getAllAskedQuestions())
+        // Note: Don't call generateQuestionWithFilter here - the prefetch effect handles it
       }, 300)
     } else {
+      // Fallback: No preloaded question available, load one now
       setTimeout(() => {
         generateQuestionWithFilter(getAllAskedQuestions())
       }, 300)
