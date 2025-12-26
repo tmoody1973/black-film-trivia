@@ -15,6 +15,8 @@ import type * as dailyChallenge from "../dailyChallenge.js";
 import type * as dailyGenerator from "../dailyGenerator.js";
 import type * as generateQuestion from "../generateQuestion.js";
 import type * as leaderboard from "../leaderboard.js";
+import type * as music from "../music.js";
+import type * as musicContent from "../musicContent.js";
 import type * as questionCache from "../questionCache.js";
 import type * as questions from "../questions.js";
 import type * as timeMachine from "../timeMachine.js";
@@ -35,6 +37,8 @@ declare const fullApi: ApiFromModules<{
   dailyGenerator: typeof dailyGenerator;
   generateQuestion: typeof generateQuestion;
   leaderboard: typeof leaderboard;
+  music: typeof music;
+  musicContent: typeof musicContent;
   questionCache: typeof questionCache;
   questions: typeof questions;
   timeMachine: typeof timeMachine;

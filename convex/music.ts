@@ -1,46 +1,45 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { ERAS, ERA_FILMS, ERA_BOOKS, ERA_CONTEXT } from "./content";
-import { ERA_MUSIC } from "./musicContent";
+import { GENRES, GENRE_ARTISTS, GENRE_CONTEXT } from "./musicContent";
 
-// Get all available eras with user progress
-export const getEras = query({
+// Get all available genres with user progress
+export const getGenres = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      // Return eras without progress
-      return ERAS.map((era) => ({
-        ...era,
+      // Return genres without progress
+      return GENRES.map((genre) => ({
+        ...genre,
         progress: null,
-        totalContent: (ERA_FILMS[era.id]?.length || 0) + (ERA_BOOKS[era.id]?.length || 0) + (ERA_MUSIC[era.id]?.length || 0),
+        totalArtists: GENRE_ARTISTS[genre.id]?.length || 0,
       }));
     }
 
-    // Get user progress for all eras
+    // Get user progress for all genres
     const progressRecords = await ctx.db
-      .query("era_progress")
+      .query("music_progress")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .collect();
 
-    const progressMap = new Map(progressRecords.map((p) => [p.era, p]));
+    const progressMap = new Map(progressRecords.map((p) => [p.genre, p]));
 
-    return ERAS.map((era) => ({
-      ...era,
-      progress: progressMap.get(era.id) || null,
-      totalContent: (ERA_FILMS[era.id]?.length || 0) + (ERA_BOOKS[era.id]?.length || 0) + (ERA_MUSIC[era.id]?.length || 0),
+    return GENRES.map((genre) => ({
+      ...genre,
+      progress: progressMap.get(genre.id) || null,
+      totalArtists: GENRE_ARTISTS[genre.id]?.length || 0,
     }));
   },
 });
 
-// Get era details with content and context
-export const getEraDetails = query({
-  args: { eraId: v.string() },
+// Get genre details with artists and context
+export const getGenreDetails = query({
+  args: { genreId: v.string() },
   handler: async (ctx, args) => {
-    const era = ERAS.find((e) => e.id === args.eraId);
-    if (!era) {
-      throw new Error("Era not found");
+    const genre = GENRES.find((g) => g.id === args.genreId);
+    if (!genre) {
+      throw new Error("Genre not found");
     }
 
     const identity = await ctx.auth.getUserIdentity();
@@ -48,67 +47,63 @@ export const getEraDetails = query({
 
     if (identity) {
       progress = await ctx.db
-        .query("era_progress")
-        .withIndex("by_userId_era", (q) =>
-          q.eq("userId", identity.subject).eq("era", args.eraId)
+        .query("music_progress")
+        .withIndex("by_userId_genre", (q) =>
+          q.eq("userId", identity.subject).eq("genre", args.genreId)
         )
         .first();
     }
 
-    const films = ERA_FILMS[args.eraId] || [];
-    const books = ERA_BOOKS[args.eraId] || [];
-    const music = ERA_MUSIC[args.eraId] || [];
-    const context = ERA_CONTEXT[args.eraId] || { movements: [], keyFigures: [], culturalMoments: [] };
+    const artists = GENRE_ARTISTS[args.genreId] || [];
+    const context = GENRE_CONTEXT[args.genreId] || { movements: [], keyFigures: [], culturalMoments: [] };
 
     return {
-      ...era,
-      films,
-      books,
-      music,
+      ...genre,
+      artists,
       context,
       progress,
-      totalContent: films.length + books.length + music.length,
+      totalArtists: artists.length,
     };
   },
 });
 
-// Get user's era progress
-export const getUserEraProgress = query({
-  args: { eraId: v.optional(v.string()) },
+// Get user's genre progress
+export const getUserGenreProgress = query({
+  args: { genreId: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
-    if (args.eraId) {
-      const eraId = args.eraId;
+    if (args.genreId) {
+      const genreId = args.genreId;
       return await ctx.db
-        .query("era_progress")
-        .withIndex("by_userId_era", (q) =>
-          q.eq("userId", identity.subject).eq("era", eraId)
+        .query("music_progress")
+        .withIndex("by_userId_genre", (q) =>
+          q.eq("userId", identity.subject).eq("genre", genreId)
         )
         .first();
     }
 
-    // Return all era progress
+    // Return all genre progress
     return await ctx.db
-      .query("era_progress")
+      .query("music_progress")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .collect();
   },
 });
 
-// Get era leaderboard
-export const getEraLeaderboard = query({
+// Get genre leaderboard
+export const getGenreLeaderboard = query({
   args: {
-    eraId: v.string(),
+    genreId: v.string(),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 50;
 
     const entries = await ctx.db
-      .query("era_progress")
-      .withIndex("by_era_highScore", (q) => q.eq("era", args.eraId))
+      .query("music_progress")
+      .withIndex("by_genre_highScore", (q) => q.eq("genre", args.genreId))
       .order("desc")
       .take(limit);
 
@@ -135,26 +130,26 @@ export const getEraLeaderboard = query({
   },
 });
 
-// Start era challenge session
-export const startEraSession = mutation({
-  args: { eraId: v.string() },
+// Start music challenge session
+export const startMusicSession = mutation({
+  args: { genreId: v.string() },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Not authenticated");
     }
 
-    // Verify era exists
-    const era = ERAS.find((e) => e.id === args.eraId);
-    if (!era) {
-      throw new Error("Era not found");
+    // Verify genre exists
+    const genre = GENRES.find((g) => g.id === args.genreId);
+    if (!genre) {
+      throw new Error("Genre not found");
     }
 
     // Check for existing in-progress session
     const existingSession = await ctx.db
-      .query("era_sessions")
-      .withIndex("by_userId_era", (q) =>
-        q.eq("userId", identity.subject).eq("era", args.eraId)
+      .query("music_sessions")
+      .withIndex("by_userId_genre", (q) =>
+        q.eq("userId", identity.subject).eq("genre", args.genreId)
       )
       .filter((q) => q.eq(q.field("status"), "in_progress"))
       .first();
@@ -164,9 +159,9 @@ export const startEraSession = mutation({
     }
 
     // Create new session
-    const sessionId = await ctx.db.insert("era_sessions", {
+    const sessionId = await ctx.db.insert("music_sessions", {
       userId: identity.subject,
-      era: args.eraId,
+      genre: args.genreId,
       score: 0,
       correctAnswers: 0,
       maxStreak: 0,
@@ -179,37 +174,36 @@ export const startEraSession = mutation({
   },
 });
 
-// Get era session
-export const getEraSession = query({
-  args: { sessionId: v.id("era_sessions") },
+// Get music session
+export const getMusicSession = query({
+  args: { sessionId: v.id("music_sessions") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.sessionId);
   },
 });
 
-// Get current era session (if in progress)
-export const getCurrentEraSession = query({
-  args: { eraId: v.string() },
+// Get current music session (if in progress)
+export const getCurrentMusicSession = query({
+  args: { genreId: v.string() },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
     return await ctx.db
-      .query("era_sessions")
-      .withIndex("by_userId_era", (q) =>
-        q.eq("userId", identity.subject).eq("era", args.eraId)
+      .query("music_sessions")
+      .withIndex("by_userId_genre", (q) =>
+        q.eq("userId", identity.subject).eq("genre", args.genreId)
       )
       .filter((q) => q.eq(q.field("status"), "in_progress"))
       .first();
   },
 });
 
-// Submit era answer
-export const submitEraAnswer = mutation({
+// Submit music answer
+export const submitMusicAnswer = mutation({
   args: {
-    sessionId: v.id("era_sessions"),
-    contentTitle: v.string(),
-    contentType: v.string(),
+    sessionId: v.id("music_sessions"),
+    artistName: v.string(),
     correct: v.boolean(),
     timeSpent: v.optional(v.number()),
   },
@@ -236,7 +230,7 @@ export const submitEraAnswer = mutation({
     let streak = 0;
     const allResults = [
       ...session.questionResults,
-      { contentTitle: args.contentTitle, contentType: args.contentType, correct: args.correct },
+      { artistName: args.artistName, contentType: "music", correct: args.correct },
     ];
     for (let i = allResults.length - 1; i >= 0; i--) {
       if (allResults[i].correct) streak++;
@@ -249,8 +243,8 @@ export const submitEraAnswer = mutation({
     const newResults = [
       ...session.questionResults,
       {
-        contentTitle: args.contentTitle,
-        contentType: args.contentType,
+        artistName: args.artistName,
+        contentType: "music",
         correct: args.correct,
         timeSpent: args.timeSpent,
       },
@@ -273,9 +267,9 @@ export const submitEraAnswer = mutation({
   },
 });
 
-// Complete era session
-export const completeEraSession = mutation({
-  args: { sessionId: v.id("era_sessions") },
+// Complete music session
+export const completeMusicSession = mutation({
+  args: { sessionId: v.id("music_sessions") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -297,11 +291,11 @@ export const completeEraSession = mutation({
       completedAt: Date.now(),
     });
 
-    // Update or create era progress
+    // Update or create genre progress
     const existingProgress = await ctx.db
-      .query("era_progress")
-      .withIndex("by_userId_era", (q) =>
-        q.eq("userId", identity.subject).eq("era", session.era)
+      .query("music_progress")
+      .withIndex("by_userId_genre", (q) =>
+        q.eq("userId", identity.subject).eq("genre", session.genre)
       )
       .first();
 
@@ -339,9 +333,9 @@ export const completeEraSession = mutation({
         masteryLevel = "fan";
       }
 
-      await ctx.db.insert("era_progress", {
+      await ctx.db.insert("music_progress", {
         userId: identity.subject,
-        era: session.era,
+        genre: session.genre,
         highScore: session.score,
         gamesPlayed: 1,
         questionsAnswered: session.questionResults.length,
@@ -355,90 +349,73 @@ export const completeEraSession = mutation({
   },
 });
 
-// Get questions for an era (returns content titles to generate questions for)
-export const getEraQuestions = query({
+// Get questions for a genre (returns artist names to generate questions for)
+export const getMusicQuestions = query({
   args: {
-    eraId: v.string(),
+    genreId: v.string(),
     count: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const count = args.count || 10;
 
-    const films = ERA_FILMS[args.eraId] || [];
-    const books = ERA_BOOKS[args.eraId] || [];
-    const music = ERA_MUSIC[args.eraId] || [];
+    const artists = GENRE_ARTISTS[args.genreId] || [];
 
     // Shuffle and select
-    const shuffledFilms = [...films].sort(() => Math.random() - 0.5);
-    const shuffledBooks = [...books].sort(() => Math.random() - 0.5);
-    const shuffledMusic = [...music].sort(() => Math.random() - 0.5);
+    const shuffledArtists = [...artists].sort(() => Math.random() - 0.5);
+    const selectedArtists = shuffledArtists.slice(0, count);
 
-    // Distribute: 4 films, 3 books, 3 music (for 10 total)
-    // Adjust if content is limited for certain eras
-    const filmCount = Math.min(4, shuffledFilms.length);
-    const bookCount = Math.min(3, shuffledBooks.length);
-    const musicCount = Math.min(3, shuffledMusic.length);
-
-    // If we have leftover slots, fill with available content
-    const selectedFilms = shuffledFilms.slice(0, filmCount);
-    const selectedBooks = shuffledBooks.slice(0, bookCount);
-    const selectedMusic = shuffledMusic.slice(0, musicCount);
-
-    const questions = [
-      ...selectedFilms.map((title) => ({ contentTitle: title, contentType: "film" })),
-      ...selectedBooks.map((title) => ({ contentTitle: title, contentType: "book" })),
-      ...selectedMusic.map((title) => ({ contentTitle: title, contentType: "music" })),
-    ];
-
-    // Shuffle all questions together and limit to count
-    return questions.sort(() => Math.random() - 0.5).slice(0, count);
+    return selectedArtists.map((artistName) => ({
+      contentTitle: artistName,
+      contentType: "music",
+      genre: args.genreId,
+    }));
   },
 });
 
-// Get user's overall era stats
-export const getUserEraStats = query({
+// Get user's overall music stats
+export const getUserMusicStats = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
     const allProgress = await ctx.db
-      .query("era_progress")
+      .query("music_progress")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .collect();
 
     if (allProgress.length === 0) {
       return {
-        erasPlayed: 0,
-        erasMastered: 0,
+        genresPlayed: 0,
+        genresMastered: 0,
         totalGames: 0,
         totalCorrect: 0,
         totalQuestions: 0,
         overallAccuracy: 0,
-        favoriteEra: null,
+        favoriteGenre: null,
       };
     }
 
     const totalGames = allProgress.reduce((sum, p) => sum + p.gamesPlayed, 0);
     const totalCorrect = allProgress.reduce((sum, p) => sum + p.correctAnswers, 0);
     const totalQuestions = allProgress.reduce((sum, p) => sum + p.questionsAnswered, 0);
-    const erasMastered = allProgress.filter((p) => p.masteryLevel === "scholar").length;
+    const genresMastered = allProgress.filter((p) => p.masteryLevel === "scholar").length;
 
-    // Find favorite era (most games played)
-    const favoriteEra = allProgress.reduce((max, p) =>
+    // Find favorite genre (most games played)
+    const favoriteGenre = allProgress.reduce((max, p) =>
       p.gamesPlayed > (max?.gamesPlayed || 0) ? p : max
     , allProgress[0]);
 
-    const era = ERAS.find((e) => e.id === favoriteEra?.era);
+    const genre = GENRES.find((g) => g.id === favoriteGenre?.genre);
 
     return {
-      erasPlayed: allProgress.length,
-      erasMastered,
+      genresPlayed: allProgress.length,
+      genresMastered,
       totalGames,
       totalCorrect,
       totalQuestions,
       overallAccuracy: totalQuestions > 0 ? totalCorrect / totalQuestions : 0,
-      favoriteEra: era ? { id: era.id, name: era.name, title: era.title } : null,
+      favoriteGenre: genre ? { id: genre.id, name: genre.name, title: genre.title } : null,
     };
   },
 });

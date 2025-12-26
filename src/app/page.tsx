@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { SignInButton } from "@clerk/nextjs";
 import { Authenticated, Unauthenticated, useConvexAuth } from "convex/react";
-import { Film, Book, Sparkles, Trophy, Zap, Calendar, Clock, Heart, Play } from "lucide-react";
+import { Film, Book, Sparkles, Trophy, Zap, Calendar, Clock, Heart, Play, Music } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -103,6 +103,10 @@ export default function Home() {
               <span className="text-sm font-medium">300+ Books</span>
             </div>
             <div className="flex items-center gap-2 rounded-full border bg-card px-4 py-2">
+              <Music className="h-4 w-4 text-purple-500" />
+              <span className="text-sm font-medium">100+ Artists</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border bg-card px-4 py-2">
               <Zap className="h-4 w-4 text-yellow-500" />
               <span className="text-sm font-medium">Multiple Difficulties</span>
             </div>
@@ -171,7 +175,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {/* Classic Mode */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -190,6 +194,28 @@ export default function Home() {
               </p>
               <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
                 Play Now
+                <Sparkles className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Music Trivia */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+              onClick={() => router.push("/music")}
+              className="group cursor-pointer rounded-xl border-2 border-purple-500/20 bg-card p-6 transition-all hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-purple-500/10 p-3">
+                <Music className="h-6 w-6 text-purple-500" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Music Trivia</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Test your knowledge of Black music legends across 8 genres.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-purple-500">
+                Explore Genres
                 <Sparkles className="h-3 w-3" />
               </span>
             </motion.div>
@@ -353,8 +379,8 @@ const features = [
 ];
 
 const stats = [
-  { value: "400+", label: "Films & Books" },
-  { value: "10+", label: "Themes" },
+  { value: "500+", label: "Films, Books & Artists" },
+  { value: "8", label: "Music Genres" },
   { value: "3", label: "Difficulty Levels" },
   { value: "∞", label: "Questions" },
 ];

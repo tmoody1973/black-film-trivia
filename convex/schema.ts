@@ -136,7 +136,7 @@ export default defineSchema({
   // Question cache - stores pre-generated questions for fast retrieval
   question_cache: defineTable({
     contentTitle: v.string(),
-    contentType: v.string(), // 'film' | 'book'
+    contentType: v.string(), // 'film' | 'book' | 'music'
     difficulty: v.string(), // 'easy' | 'medium' | 'hard'
     // Question data
     question: v.string(),
@@ -144,10 +144,15 @@ export default defineSchema({
     answer: v.string(),
     plot: v.optional(v.string()),
     // Metadata
-    creator: v.optional(v.string()), // director or author
+    creator: v.optional(v.string()), // director or author or artist
     year: v.optional(v.string()),
     posterUrl: v.optional(v.string()),
     coverUrl: v.optional(v.string()),
+    // Music-specific metadata
+    artistName: v.optional(v.string()),
+    albumTitle: v.optional(v.string()),
+    musicGenre: v.optional(v.string()), // jazz, blues, hip-hop, etc.
+    albumCoverUrl: v.optional(v.string()),
     // Learning content
     learning: v.optional(v.object({
       didYouKnow: v.string(),
@@ -162,7 +167,8 @@ export default defineSchema({
   })
     .index("by_content", ["contentTitle", "contentType", "difficulty"])
     .index("by_contentTitle", ["contentTitle"])
-    .index("by_createdAt", ["createdAt"]),
+    .index("by_createdAt", ["createdAt"])
+    .index("by_musicGenre", ["musicGenre"]),
 
   // User Library - saved films and books
   user_library: defineTable({
@@ -272,4 +278,42 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_userId_era", ["userId", "era"])
     .index("by_era_score", ["era", "score"]),
+
+  // Music Progress - Music mode progress tracking by genre
+  music_progress: defineTable({
+    userId: v.string(),
+    genre: v.string(), // "jazz" | "blues" | "soul-rnb" | "funk" | "hip-hop" | "gospel" | "reggae" | "afrobeats"
+    highScore: v.number(),
+    gamesPlayed: v.number(),
+    questionsAnswered: v.number(),
+    correctAnswers: v.number(),
+    masteryLevel: v.string(), // "novice" | "fan" | "expert" | "scholar"
+    lastPlayedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_genre", ["userId", "genre"])
+    .index("by_genre_highScore", ["genre", "highScore"]),
+
+  // Music Game Sessions - individual Music mode game sessions
+  music_sessions: defineTable({
+    userId: v.string(),
+    genre: v.string(),
+    score: v.number(),
+    correctAnswers: v.number(),
+    maxStreak: v.number(),
+    questionResults: v.array(
+      v.object({
+        artistName: v.string(),
+        contentType: v.string(), // 'music'
+        correct: v.boolean(),
+        timeSpent: v.optional(v.number()),
+      })
+    ),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    status: v.string(), // 'in_progress' | 'completed'
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_genre", ["userId", "genre"])
+    .index("by_genre_score", ["genre", "score"]),
 });

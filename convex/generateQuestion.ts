@@ -31,6 +31,19 @@ const PRIORITY_BOOKS = [
   "Kindred", "Parable of the Sower", "Children of Blood and Bone",
 ];
 
+const PRIORITY_MUSIC = [
+  // Legends
+  "Michael Jackson", "Prince", "Whitney Houston", "Aretha Franklin",
+  "Stevie Wonder", "Marvin Gaye", "Bob Marley", "James Brown",
+  // Hip-Hop Icons
+  "Tupac Shakur", "The Notorious B.I.G.", "Jay-Z", "Kendrick Lamar",
+  "Nas", "OutKast", "Lauryn Hill", "Missy Elliott",
+  // Modern Stars
+  "Beyonce", "Drake", "Rihanna", "The Weeknd", "Frank Ocean", "SZA",
+  // Afrobeats
+  "Burna Boy", "Wizkid", "Tems",
+];
+
 // Helper to normalize answer - converts letter answers (A, B, C, D) to full option text
 function normalizeAnswer(answer: string, options: string[]): string {
   const trimmedAnswer = answer.trim();
@@ -68,22 +81,48 @@ function normalizeAnswer(answer: string, options: string[]): string {
 // Optimized prompt - shorter and more focused for faster response
 function getOptimizedPrompt(
   title: string,
-  contentType: "film" | "book",
+  contentType: "film" | "book" | "music",
   difficulty: string
 ): string {
   const isBook = contentType === "book";
+  const isMusic = contentType === "music";
 
   // Different guides for student vs general difficulty
   const difficultyGuide: Record<string, string> = {
     middle_school: "simple questions about main characters, basic plot points, and easy-to-understand themes. Use age-appropriate language for 11-14 year olds",
     high_school: "questions about themes, character motivations, historical context, and cultural significance. Appropriate for 14-18 year olds",
-    easy: "basic plot, main characters, famous quotes",
-    medium: "supporting characters, specific scenes, themes",
-    hard: "obscure details, production facts, critical reception",
+    easy: "basic facts, famous songs, main achievements",
+    medium: "album details, collaborations, cultural impact",
+    hard: "obscure details, production facts, sampling history, critical reception",
   };
 
   const guide = difficultyGuide[difficulty] || difficultyGuide.medium;
   const isStudent = difficulty === "middle_school" || difficulty === "high_school";
+
+  if (isMusic) {
+    return `For the artist "${title}", generate music trivia. Respond ONLY with JSON, no markdown.
+
+RULES:
+- ${difficulty.toUpperCase().replace("_", " ")} level: ${guide}
+- Focus on discography, hit songs, albums, collaborations, awards, cultural impact
+- Include questions about their musical style, influences, and legacy
+${isStudent ? "- Keep language educational and age-appropriate\n- Include learning opportunities in the question" : ""}
+
+JSON format:
+{
+  "plot": "2-3 sentence artist bio and musical significance",
+  "question": "trivia question about the artist",
+  "options": ["Full answer A text", "Full answer B text", "Full answer C text", "Full answer D text"],
+  "answer": "The FULL TEXT of the correct option (NOT just a letter A/B/C/D - must be the complete answer text)",
+  "learning": {
+    "didYouKnow": "interesting fact about the artist${isStudent ? " students would find engaging" : ""}",
+    "culturalContext": "cultural and musical significance${isStudent ? " explained for young learners" : ""}",
+    "creatorSpotlight": "artist biography and career highlights",
+    "awards": ["Grammy wins or nominations, other major awards"],
+    "legacy": "lasting impact on music and culture"
+  }
+}`;
+  }
 
   return `For "${title}" (${isBook ? "book" : "film"}), generate trivia. Respond ONLY with JSON, no markdown.
 
@@ -113,7 +152,7 @@ JSON format:
 export const generateQuestion = action({
   args: {
     contentTitle: v.string(),
-    contentType: v.union(v.literal("film"), v.literal("book")),
+    contentType: v.union(v.literal("film"), v.literal("book"), v.literal("music")),
     difficulty: v.union(
       v.literal("middle_school"),
       v.literal("high_school"),
@@ -121,6 +160,7 @@ export const generateQuestion = action({
       v.literal("medium"),
       v.literal("hard")
     ),
+    musicGenre: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{
     id: string;
@@ -128,13 +168,16 @@ export const generateQuestion = action({
     options: string[];
     answer: string;
     contentTitle: string;
-    contentType: "film" | "book";
+    contentType: "film" | "book" | "music";
     difficulty: string;
     plot?: string;
     creator?: string;
     year?: string;
     posterUrl?: string;
     coverUrl?: string;
+    artistName?: string;
+    albumCoverUrl?: string;
+    musicGenre?: string;
     learning?: {
       didYouKnow: string;
       culturalContext: string;
@@ -163,13 +206,16 @@ export const generateQuestion = action({
         options: cached.options,
         answer: cached.answer,
         contentTitle: cached.contentTitle,
-        contentType: cached.contentType as "film" | "book",
+        contentType: cached.contentType as "film" | "book" | "music",
         difficulty: cached.difficulty,
         plot: cached.plot,
         creator: cached.creator,
         year: cached.year,
         posterUrl: cached.posterUrl,
         coverUrl: cached.coverUrl,
+        artistName: cached.artistName,
+        albumCoverUrl: cached.albumCoverUrl,
+        musicGenre: cached.musicGenre,
         learning: cached.learning,
         fromCache: true,
       };
@@ -177,17 +223,21 @@ export const generateQuestion = action({
 
     // 2. Not cached - generate new question
     const isBook = args.contentType === "book";
+    const isMusic = args.contentType === "music";
     const perplexityKey = process.env.PERPLEXITY_API_KEY;
     const omdbKey = process.env.OMDB_API_KEY;
+    const discogsToken = process.env.DISCOGS_API_TOKEN;
 
     if (!perplexityKey) {
       throw new Error("PERPLEXITY_API_KEY not configured");
     }
 
     // 3. Fetch metadata and generate question in parallel
-    const metadataPromise = isBook
-      ? fetchBookMetadata(args.contentTitle)
-      : fetchFilmMetadata(args.contentTitle, omdbKey);
+    const metadataPromise = isMusic
+      ? fetchMusicMetadata(args.contentTitle, discogsToken, args.musicGenre)
+      : isBook
+        ? fetchBookMetadata(args.contentTitle)
+        : fetchFilmMetadata(args.contentTitle, omdbKey);
 
     const questionPromise = fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
@@ -253,12 +303,16 @@ export const generateQuestion = action({
       year: metadata.year,
       posterUrl: metadata.posterUrl,
       coverUrl: metadata.coverUrl,
+      // Music-specific fields
+      artistName: isMusic ? args.contentTitle : undefined,
+      albumCoverUrl: metadata.albumCoverUrl,
+      musicGenre: args.musicGenre,
       learning: questionData.learning || {
-        didYouKnow: `"${args.contentTitle}" is a notable work in Black ${isBook ? "literature" : "cinema"}.`,
-        culturalContext: "This work represents an important contribution to Black storytelling.",
-        creatorSpotlight: metadata.creator ? `Created by ${metadata.creator}.` : "",
+        didYouKnow: `"${args.contentTitle}" is a notable ${isMusic ? "artist in Black music" : isBook ? "work in Black literature" : "work in Black cinema"}.`,
+        culturalContext: `This ${isMusic ? "artist" : "work"} represents an important contribution to Black ${isMusic ? "music" : "storytelling"}.`,
+        creatorSpotlight: metadata.creator ? `${isMusic ? "Artist" : "Created by"} ${metadata.creator}.` : "",
         awards: [],
-        legacy: "This work continues to influence and inspire audiences today.",
+        legacy: `This ${isMusic ? "artist" : "work"} continues to influence and inspire audiences today.`,
       },
     };
 
@@ -277,7 +331,7 @@ export const generateQuestion = action({
 async function fetchFilmMetadata(
   title: string,
   apiKey?: string
-): Promise<{ creator?: string; year?: string; posterUrl?: string; coverUrl?: string }> {
+): Promise<{ creator?: string; year?: string; posterUrl?: string; coverUrl?: string; albumCoverUrl?: string }> {
   if (!apiKey) {
     return {};
   }
@@ -302,7 +356,7 @@ async function fetchFilmMetadata(
 // Fetch book metadata from Open Library (free, no API key required)
 async function fetchBookMetadata(
   title: string
-): Promise<{ creator?: string; year?: string; posterUrl?: string; coverUrl?: string }> {
+): Promise<{ creator?: string; year?: string; posterUrl?: string; coverUrl?: string; albumCoverUrl?: string }> {
   try {
     // Search Open Library for the book
     const searchUrl = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=1`;
@@ -329,6 +383,131 @@ async function fetchBookMetadata(
     };
   } catch {
     return {};
+  }
+}
+
+// Fetch music metadata from Discogs API
+async function fetchMusicMetadata(
+  artistName: string,
+  discogsToken?: string,
+  genre?: string
+): Promise<{ creator?: string; year?: string; posterUrl?: string; coverUrl?: string; albumCoverUrl?: string }> {
+  try {
+    // Search Discogs for the artist
+    const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(artistName)}&type=artist&per_page=1`;
+    const headers: Record<string, string> = {
+      "User-Agent": "BlackCultureTrivia/1.0",
+    };
+
+    if (discogsToken) {
+      headers["Authorization"] = `Discogs token=${discogsToken}`;
+    }
+
+    const response = await fetch(searchUrl, { headers });
+    if (!response.ok) {
+      console.log("Discogs search failed, trying Spotify fallback");
+      return fetchMusicMetadataFromSpotify(artistName);
+    }
+
+    const data = await response.json();
+    const artist = data.results?.[0];
+    if (!artist) {
+      return fetchMusicMetadataFromSpotify(artistName);
+    }
+
+    // Get artist details if we have an ID
+    let artistImage: string | undefined;
+    if (artist.id) {
+      try {
+        const artistResponse = await fetch(
+          `https://api.discogs.com/artists/${artist.id}`,
+          { headers }
+        );
+        if (artistResponse.ok) {
+          const artistData = await artistResponse.json();
+          artistImage = artistData.images?.[0]?.uri;
+        }
+      } catch {
+        // Use thumbnail from search
+        artistImage = artist.thumb || artist.cover_image;
+      }
+    }
+
+    return {
+      creator: artistName,
+      year: undefined, // Artists don't have a single year
+      posterUrl: artistImage,
+      coverUrl: artistImage,
+      albumCoverUrl: artistImage,
+    };
+  } catch (error) {
+    console.error("Discogs fetch error:", error);
+    return fetchMusicMetadataFromSpotify(artistName);
+  }
+}
+
+// Fallback to Spotify for music metadata
+async function fetchMusicMetadataFromSpotify(
+  artistName: string
+): Promise<{ creator?: string; year?: string; posterUrl?: string; coverUrl?: string; albumCoverUrl?: string }> {
+  try {
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      return { creator: artistName };
+    }
+
+    // Get access token
+    const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+      },
+      body: "grant_type=client_credentials",
+    });
+
+    if (!tokenResponse.ok) {
+      return { creator: artistName };
+    }
+
+    const tokenData = await tokenResponse.json();
+    const accessToken = tokenData.access_token;
+
+    // Search for artist
+    const searchResponse = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!searchResponse.ok) {
+      return { creator: artistName };
+    }
+
+    const searchData = await searchResponse.json();
+    const artist = searchData.artists?.items?.[0];
+
+    if (!artist) {
+      return { creator: artistName };
+    }
+
+    const artistImage = artist.images?.[0]?.url;
+
+    return {
+      creator: artistName,
+      year: undefined,
+      posterUrl: artistImage,
+      coverUrl: artistImage,
+      albumCoverUrl: artistImage,
+    };
+  } catch (error) {
+    console.error("Spotify fetch error:", error);
+    return { creator: artistName };
   }
 }
 
@@ -466,8 +645,8 @@ export const overnightPregenerate = internalAction({
   args: {},
   handler: async (ctx): Promise<{
     date: string;
-    generated: { films: number; books: number };
-    cached: { films: number; books: number };
+    generated: { films: number; books: number; music: number };
+    cached: { films: number; books: number; music: number };
     errors: number;
   }> => {
     const today = new Date();
@@ -476,8 +655,8 @@ export const overnightPregenerate = internalAction({
 
     const results = {
       date: today.toISOString().split("T")[0],
-      generated: { films: 0, books: 0 },
-      cached: { films: 0, books: 0 },
+      generated: { films: 0, books: 0, music: 0 },
+      cached: { films: 0, books: 0, music: 0 },
       errors: 0,
     };
 
@@ -485,8 +664,9 @@ export const overnightPregenerate = internalAction({
     // Each day generates different subset to spread the load
     const filmStartIndex = (dayOfWeek * 7) % PRIORITY_FILMS.length;
     const bookStartIndex = (dayOfWeek * 3) % PRIORITY_BOOKS.length;
+    const musicStartIndex = (dayOfWeek * 4) % PRIORITY_MUSIC.length;
 
-    // Get 7 films and 3 books per day (rotates through full list over time)
+    // Get 7 films, 3 books, and 4 music artists per day
     const todaysFilms = [
       ...PRIORITY_FILMS.slice(filmStartIndex, filmStartIndex + 7),
       ...PRIORITY_FILMS.slice(0, Math.max(0, 7 - (PRIORITY_FILMS.length - filmStartIndex))),
@@ -496,6 +676,11 @@ export const overnightPregenerate = internalAction({
       ...PRIORITY_BOOKS.slice(bookStartIndex, bookStartIndex + 3),
       ...PRIORITY_BOOKS.slice(0, Math.max(0, 3 - (PRIORITY_BOOKS.length - bookStartIndex))),
     ].slice(0, 3);
+
+    const todaysMusic = [
+      ...PRIORITY_MUSIC.slice(musicStartIndex, musicStartIndex + 4),
+      ...PRIORITY_MUSIC.slice(0, Math.max(0, 4 - (PRIORITY_MUSIC.length - musicStartIndex))),
+    ].slice(0, 4);
 
     // Generate for each difficulty
     for (const difficulty of difficulties) {
@@ -551,6 +736,33 @@ export const overnightPregenerate = internalAction({
           await new Promise((resolve) => setTimeout(resolve, 1000));
         } catch (error) {
           console.error(`Error generating book "${title}":`, error);
+          results.errors++;
+        }
+      }
+
+      // Music
+      for (const artistName of todaysMusic) {
+        try {
+          const cached = await ctx.runQuery(
+            internal.questionCache.getCachedQuestion,
+            { contentTitle: artistName, contentType: "music", difficulty }
+          );
+
+          if (cached) {
+            results.cached.music++;
+            continue;
+          }
+
+          await ctx.runAction(api.generateQuestion.generateQuestion, {
+            contentTitle: artistName,
+            contentType: "music",
+            difficulty,
+          });
+          results.generated.music++;
+
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`Error generating music "${artistName}":`, error);
           results.errors++;
         }
       }

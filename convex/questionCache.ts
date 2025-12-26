@@ -36,6 +36,11 @@ export const saveToCache = internalMutation({
     year: v.optional(v.string()),
     posterUrl: v.optional(v.string()),
     coverUrl: v.optional(v.string()),
+    // Music-specific fields
+    artistName: v.optional(v.string()),
+    albumTitle: v.optional(v.string()),
+    musicGenre: v.optional(v.string()),
+    albumCoverUrl: v.optional(v.string()),
     learning: v.optional(
       v.object({
         didYouKnow: v.string(),

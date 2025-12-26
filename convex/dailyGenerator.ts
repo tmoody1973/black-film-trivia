@@ -5,6 +5,8 @@ import { Id } from "./_generated/dataModel";
 
 // Films and books lists for daily challenges
 import { DAILY_FILMS, DAILY_BOOKS } from "./content";
+// Music artists for daily challenges
+import { DAILY_MUSIC } from "./musicContent";
 
 // Helper to get tomorrow's date in UTC
 function getTomorrowUTC(): string {
@@ -50,13 +52,15 @@ export const generateTomorrowsChallenge = internalAction({
       {}
     );
 
-    // Select 5 random films and 5 random books
-    const films = shuffleArray(DAILY_FILMS).slice(0, 5);
-    const books = shuffleArray(DAILY_BOOKS).slice(0, 5);
+    // Select 4 random films, 3 random books, and 3 random music artists
+    const films = shuffleArray(DAILY_FILMS).slice(0, 4);
+    const books = shuffleArray(DAILY_BOOKS).slice(0, 3);
+    const music = shuffleArray(DAILY_MUSIC).slice(0, 3);
 
     const questions = [
       ...films.map((title) => ({ contentTitle: title, contentType: "film" })),
       ...books.map((title) => ({ contentTitle: title, contentType: "book" })),
+      ...music.map((title) => ({ contentTitle: title, contentType: "music" })),
     ];
 
     // Shuffle all questions together
@@ -73,7 +77,7 @@ export const generateTomorrowsChallenge = internalAction({
       }
     );
 
-    console.log(`Created daily challenge #${challengeNumber} for ${tomorrow}`);
+    console.log(`Created daily challenge #${challengeNumber} for ${tomorrow} (4 films, 3 books, 3 music)`);
 
     return challengeId;
   },
@@ -99,13 +103,15 @@ export const generateChallengeForDate = internalAction({
       {}
     );
 
-    // Select 5 random films and 5 random books
-    const films = shuffleArray(DAILY_FILMS).slice(0, 5);
-    const books = shuffleArray(DAILY_BOOKS).slice(0, 5);
+    // Select 4 random films, 3 random books, and 3 random music artists
+    const films = shuffleArray(DAILY_FILMS).slice(0, 4);
+    const books = shuffleArray(DAILY_BOOKS).slice(0, 3);
+    const music = shuffleArray(DAILY_MUSIC).slice(0, 3);
 
     const questions = [
       ...films.map((title) => ({ contentTitle: title, contentType: "film" })),
       ...books.map((title) => ({ contentTitle: title, contentType: "book" })),
+      ...music.map((title) => ({ contentTitle: title, contentType: "music" })),
     ];
 
     // Shuffle all questions together
@@ -122,7 +128,7 @@ export const generateChallengeForDate = internalAction({
       }
     );
 
-    console.log(`Created daily challenge #${challengeNumber} for ${args.date}`);
+    console.log(`Created daily challenge #${challengeNumber} for ${args.date} (4 films, 3 books, 3 music)`);
 
     return challengeId;
   },
@@ -148,12 +154,14 @@ export const ensureTodaysChallengeExists = internalAction({
       {}
     );
 
-    const films = shuffleArray(DAILY_FILMS).slice(0, 5);
-    const books = shuffleArray(DAILY_BOOKS).slice(0, 5);
+    const films = shuffleArray(DAILY_FILMS).slice(0, 4);
+    const books = shuffleArray(DAILY_BOOKS).slice(0, 3);
+    const music = shuffleArray(DAILY_MUSIC).slice(0, 3);
 
     const questions = [
       ...films.map((title) => ({ contentTitle: title, contentType: "film" })),
       ...books.map((title) => ({ contentTitle: title, contentType: "book" })),
+      ...music.map((title) => ({ contentTitle: title, contentType: "music" })),
     ];
 
     const shuffledQuestions = shuffleArray(questions);
@@ -168,7 +176,7 @@ export const ensureTodaysChallengeExists = internalAction({
       }
     );
 
-    console.log(`Created on-demand daily challenge #${challengeNumber} for ${today}`);
+    console.log(`Created on-demand daily challenge #${challengeNumber} for ${today} (4 films, 3 books, 3 music)`);
 
     return challengeId;
   },

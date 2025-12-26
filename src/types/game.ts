@@ -1,6 +1,6 @@
 // Content type definitions
-export type ContentCategory = 'films' | 'books' | 'mixed'
-export type ContentType = 'film' | 'book'
+export type ContentCategory = 'films' | 'books' | 'music' | 'mixed'
+export type ContentType = 'film' | 'book' | 'music'
 export type Difficulty = 'middle_school' | 'high_school' | 'easy' | 'medium' | 'hard'
 
 export interface GameConfig {
@@ -22,13 +22,14 @@ export interface Question {
   question: string
   options: string[]
   answer: string
-  contentTitle: string       // Generic title (film or book)
-  contentType: ContentType   // 'film' or 'book'
+  contentTitle: string       // Generic title (film, book, or artist)
+  contentType: ContentType   // 'film', 'book', or 'music'
   difficulty: Difficulty
   posterUrl?: string         // For films (from OMDB)
   coverUrl?: string          // For books (from Google Books)
+  albumCoverUrl?: string     // For music (from Discogs/Spotify)
   plot?: string              // Synopsis/description
-  creator?: string           // Director for films, Author for books
+  creator?: string           // Director for films, Author for books, Artist for music
   year?: string
   learning?: LearningContent
   // Legacy support - deprecated, use contentTitle/creator
