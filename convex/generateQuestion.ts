@@ -1,8 +1,35 @@
 "use node";
 
 import { v } from "convex/values";
-import { action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { action, internalAction } from "./_generated/server";
+import { internal, api } from "./_generated/api";
+
+// Priority content for overnight pre-generation
+const PRIORITY_FILMS = [
+  // Tier 1: Most popular
+  "Black Panther", "Get Out", "Friday", "Coming to America", "Love & Basketball",
+  "The Color Purple", "Moonlight", "12 Years a Slave", "Selma", "Malcolm X",
+  "Do the Right Thing", "Boyz n the Hood", "Girls Trip", "Bad Boys", "Creed",
+  "Hidden Figures", "Us", "The Hate U Give", "Queen & Slim", "Barbershop",
+  // Tier 2: Very popular
+  "House Party", "Boomerang", "Set It Off", "Waiting to Exhale", "Soul Food",
+  "The Best Man", "Think Like a Man", "Juice", "Menace II Society", "Poetic Justice",
+  "Love Jones", "Brown Sugar", "The Wood", "Shaft", "Beverly Hills Cop",
+  "Trading Places", "Harlem Nights", "Life", "Nutty Professor", "How High",
+  // Tier 3: Modern hits
+  "Fences", "Ma Rainey's Black Bottom", "One Night in Miami", "The Woman King",
+  "Nope", "American Fiction", "If Beale Street Could Talk", "Harriet", "Just Mercy",
+  "Candyman", "White Chicks", "Next Friday", "Bad Boys II", "Ride Along",
+];
+
+const PRIORITY_BOOKS = [
+  "Beloved", "The Color Purple", "Their Eyes Were Watching God", "Invisible Man",
+  "Native Son", "I Know Why the Caged Bird Sings", "The Autobiography of Malcolm X",
+  "Between the World and Me", "The Bluest Eye", "Song of Solomon",
+  "Americanah", "The Vanishing Half", "Such a Fun Age", "An American Marriage",
+  "Homegoing", "The Water Dancer", "The Nickel Boys", "The Hate U Give",
+  "Kindred", "Parable of the Sower", "Children of Blood and Bone",
+];
 
 // Helper to normalize answer - converts letter answers (A, B, C, D) to full option text
 function normalizeAnswer(answer: string, options: string[]): string {
@@ -429,6 +456,107 @@ export const preGenerateQuestions = action({
       }
     }
 
+    return results;
+  },
+});
+
+// Overnight pre-generation - runs via cron at 3 AM UTC
+// Generates questions for priority content across all difficulty levels
+export const overnightPregenerate = internalAction({
+  args: {},
+  handler: async (ctx): Promise<{
+    date: string;
+    generated: { films: number; books: number };
+    cached: { films: number; books: number };
+    errors: number;
+  }> => {
+    const today = new Date();
+    const dayOfWeek = today.getUTCDay();
+    const difficulties = ["easy", "medium", "hard"] as const;
+
+    const results = {
+      date: today.toISOString().split("T")[0],
+      generated: { films: 0, books: 0 },
+      cached: { films: 0, books: 0 },
+      errors: 0,
+    };
+
+    // Rotate through content based on day of week
+    // Each day generates different subset to spread the load
+    const filmStartIndex = (dayOfWeek * 7) % PRIORITY_FILMS.length;
+    const bookStartIndex = (dayOfWeek * 3) % PRIORITY_BOOKS.length;
+
+    // Get 7 films and 3 books per day (rotates through full list over time)
+    const todaysFilms = [
+      ...PRIORITY_FILMS.slice(filmStartIndex, filmStartIndex + 7),
+      ...PRIORITY_FILMS.slice(0, Math.max(0, 7 - (PRIORITY_FILMS.length - filmStartIndex))),
+    ].slice(0, 7);
+
+    const todaysBooks = [
+      ...PRIORITY_BOOKS.slice(bookStartIndex, bookStartIndex + 3),
+      ...PRIORITY_BOOKS.slice(0, Math.max(0, 3 - (PRIORITY_BOOKS.length - bookStartIndex))),
+    ].slice(0, 3);
+
+    // Generate for each difficulty
+    for (const difficulty of difficulties) {
+      // Films
+      for (const title of todaysFilms) {
+        try {
+          const cached = await ctx.runQuery(
+            internal.questionCache.getCachedQuestion,
+            { contentTitle: title, contentType: "film", difficulty }
+          );
+
+          if (cached) {
+            results.cached.films++;
+            continue;
+          }
+
+          // Generate using the main action
+          await ctx.runAction(api.generateQuestion.generateQuestion, {
+            contentTitle: title,
+            contentType: "film",
+            difficulty,
+          });
+          results.generated.films++;
+
+          // Delay to avoid rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`Error generating film "${title}":`, error);
+          results.errors++;
+        }
+      }
+
+      // Books
+      for (const title of todaysBooks) {
+        try {
+          const cached = await ctx.runQuery(
+            internal.questionCache.getCachedQuestion,
+            { contentTitle: title, contentType: "book", difficulty }
+          );
+
+          if (cached) {
+            results.cached.books++;
+            continue;
+          }
+
+          await ctx.runAction(api.generateQuestion.generateQuestion, {
+            contentTitle: title,
+            contentType: "book",
+            difficulty,
+          });
+          results.generated.books++;
+
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`Error generating book "${title}":`, error);
+          results.errors++;
+        }
+      }
+    }
+
+    console.log("Overnight pre-generation complete:", results);
     return results;
   },
 });
