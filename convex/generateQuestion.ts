@@ -4,6 +4,40 @@ import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 
+// Helper to normalize answer - converts letter answers (A, B, C, D) to full option text
+function normalizeAnswer(answer: string, options: string[]): string {
+  const trimmedAnswer = answer.trim();
+
+  // Check if it's already a valid option
+  if (options.includes(trimmedAnswer)) {
+    return trimmedAnswer;
+  }
+
+  // Check if it's a letter (A, B, C, D) or "Option A" format
+  const letterMatch = trimmedAnswer.match(/^(?:Option\s+)?([A-Da-d])\.?$/i);
+  if (letterMatch) {
+    const letterIndex = letterMatch[1].toUpperCase().charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+    if (letterIndex >= 0 && letterIndex < options.length) {
+      return options[letterIndex];
+    }
+  }
+
+  // Try case-insensitive match
+  const lowerAnswer = trimmedAnswer.toLowerCase();
+  const matchingOption = options.find(
+    (opt) => opt.toLowerCase() === lowerAnswer
+  );
+  if (matchingOption) {
+    return matchingOption;
+  }
+
+  // Default to first option if nothing matches (shouldn't happen)
+  console.warn(
+    `Answer "${answer}" doesn't match any option, defaulting to first option`
+  );
+  return options[0];
+}
+
 // Optimized prompt - shorter and more focused for faster response
 function getOptimizedPrompt(
   title: string,
@@ -36,8 +70,8 @@ JSON format:
 {
   "plot": "2 sentence synopsis${isStudent ? " (age-appropriate)" : ""}",
   "question": "trivia question",
-  "options": ["A", "B", "C", "D"],
-  "answer": "correct option exactly",
+  "options": ["Full answer A text", "Full answer B text", "Full answer C text", "Full answer D text"],
+  "answer": "The FULL TEXT of the correct option (NOT just a letter A/B/C/D - must be the complete answer text)",
   "learning": {
     "didYouKnow": "interesting fact${isStudent ? " students would find engaging" : ""}",
     "culturalContext": "cultural significance${isStudent ? " explained for young learners" : ""}",
@@ -173,14 +207,20 @@ export const generateQuestion = action({
       throw new Error("Invalid JSON response from Perplexity");
     }
 
-    // 4. Build response with metadata
+    // 4. Normalize the answer to ensure it's the full option text, not just a letter
+    const normalizedAnswer = normalizeAnswer(
+      questionData.answer,
+      questionData.options
+    );
+
+    // 5. Build response with metadata
     const result = {
       contentTitle: args.contentTitle,
       contentType: args.contentType,
       difficulty: args.difficulty,
       question: questionData.question,
       options: questionData.options,
-      answer: questionData.answer,
+      answer: normalizedAnswer,
       plot: questionData.plot,
       creator: metadata.creator,
       year: metadata.year,
@@ -358,6 +398,12 @@ export const preGenerateQuestions = action({
           continue;
         }
 
+        // Normalize the answer
+        const normalizedAnswer = normalizeAnswer(
+          questionData.answer,
+          questionData.options
+        );
+
         // Save to cache
         await ctx.runMutation(internal.questionCache.saveToCache, {
           contentTitle: content.title,
@@ -365,7 +411,7 @@ export const preGenerateQuestions = action({
           difficulty: args.difficulty,
           question: questionData.question,
           options: questionData.options,
-          answer: questionData.answer,
+          answer: normalizedAnswer,
           plot: questionData.plot,
           creator: metadata.creator,
           year: metadata.year,

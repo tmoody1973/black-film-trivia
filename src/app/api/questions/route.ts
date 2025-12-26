@@ -7,6 +7,36 @@ interface QuestionRequest {
   difficulty?: Difficulty
 }
 
+// Helper to normalize answer - converts letter answers (A, B, C, D) to full option text
+function normalizeAnswer(answer: string, options: string[]): string {
+  const trimmedAnswer = answer.trim()
+
+  // Check if it's already a valid option
+  if (options.includes(trimmedAnswer)) {
+    return trimmedAnswer
+  }
+
+  // Check if it's a letter (A, B, C, D) or "Option A" format
+  const letterMatch = trimmedAnswer.match(/^(?:Option\s+)?([A-Da-d])\.?$/i)
+  if (letterMatch) {
+    const letterIndex = letterMatch[1].toUpperCase().charCodeAt(0) - 65 // A=0, B=1, C=2, D=3
+    if (letterIndex >= 0 && letterIndex < options.length) {
+      return options[letterIndex]
+    }
+  }
+
+  // Try case-insensitive match
+  const lowerAnswer = trimmedAnswer.toLowerCase()
+  const matchingOption = options.find(opt => opt.toLowerCase() === lowerAnswer)
+  if (matchingOption) {
+    return matchingOption
+  }
+
+  // Default to first option if nothing matches (shouldn't happen)
+  console.warn(`Answer "${answer}" doesn't match any option, defaulting to first option`)
+  return options[0]
+}
+
 // Generate question for a film
 async function generateFilmQuestion(movieTitle: string, difficulty: Difficulty) {
   const [omdbResponse, perplexityResponse] = await Promise.all([
@@ -37,7 +67,7 @@ Return this exact JSON structure:
   "plot": "A 2-3 sentence plot summary capturing the key elements of the story",
   "question": "A ${difficulty} difficulty trivia question about the film",
   "options": ["Option A", "Option B", "Option C", "Option D"],
-  "answer": "The correct answer (must match one of the options exactly)",
+  "answer": "The FULL TEXT of the correct option - NOT a letter like A/B/C/D, but the complete answer text that exactly matches one of the options above",
   "learning": {
     "didYouKnow": "A fascinating fact about this film that most people don't know",
     "culturalContext": "The cultural significance and historical context of this film in Black cinema",
@@ -78,6 +108,9 @@ Return this exact JSON structure:
     throw new Error('Invalid JSON response from Perplexity')
   }
 
+  // Normalize the answer to ensure it's the full option text, not just a letter
+  const normalizedAnswer = normalizeAnswer(questionData.answer, questionData.options)
+
   const learning = questionData.learning || {
     didYouKnow: `"${movieTitle}" is a notable film in Black cinema history.`,
     culturalContext: "This film represents an important contribution to Black storytelling.",
@@ -88,6 +121,7 @@ Return this exact JSON structure:
 
   return {
     ...questionData,
+    answer: normalizedAnswer,
     id: Math.random().toString(36).substring(7),
     contentTitle: movieTitle,
     contentType: 'film' as ContentType,
@@ -138,7 +172,7 @@ Return this exact JSON structure:
   "plot": "A 2-3 sentence synopsis capturing the key elements of the story",
   "question": "A ${difficulty} difficulty trivia question about the book",
   "options": ["Option A", "Option B", "Option C", "Option D"],
-  "answer": "The correct answer (must match one of the options exactly)",
+  "answer": "The FULL TEXT of the correct option - NOT a letter like A/B/C/D, but the complete answer text that exactly matches one of the options above",
   "learning": {
     "didYouKnow": "A fascinating fact about this book that most people don't know",
     "culturalContext": "The cultural significance and historical context of this book in Black literature",
@@ -194,6 +228,9 @@ Return this exact JSON structure:
     throw new Error('Invalid JSON response from Perplexity')
   }
 
+  // Normalize the answer to ensure it's the full option text, not just a letter
+  const normalizedAnswer = normalizeAnswer(questionData.answer, questionData.options)
+
   // Extract author from Google Books or use Perplexity data
   const author = bookData?.authors?.[0] || null
   const publishedDate = bookData?.publishedDate || null
@@ -209,6 +246,7 @@ Return this exact JSON structure:
 
   return {
     ...questionData,
+    answer: normalizedAnswer,
     id: Math.random().toString(36).substring(7),
     contentTitle: bookTitle,
     contentType: 'book' as ContentType,
