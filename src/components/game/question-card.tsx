@@ -65,8 +65,9 @@ export function QuestionCard({ question, onAnswer, currentPoints, questionNumber
   const creator = question.creator || question.director || ''
   const contentType = question.contentType || 'film'
   const isBook = contentType === 'book'
-  const creatorLabel = isBook ? 'Written by' : 'Directed by'
-  const posterUrl = question.posterUrl || question.coverUrl
+  const isMusic = contentType === 'music'
+  const creatorLabel = isMusic ? 'Artist' : isBook ? 'Written by' : 'Directed by'
+  const posterUrl = question.posterUrl || question.coverUrl || question.albumCoverUrl
 
   // Determine what info to hide based on the question
   const hideCreator = wouldSpoilAnswer(question.question, 'creator')
