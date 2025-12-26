@@ -18,7 +18,7 @@ import {
   type Difficulty as DifficultyType,
 } from '@/lib/constants'
 import { Question, LearningContent, ContentItem, ContentType } from '@/types/game'
-import { Trophy, Flame, Star, RotateCcw, Medal, LogIn } from 'lucide-react'
+import { Trophy, Flame, Star, RotateCcw, Medal, LogIn, Music, Calendar, Clock, Play } from 'lucide-react'
 
 // Session storage key for tracking asked questions - includes category for separation
 const getSessionKey = (category: string, theme: string) =>
@@ -562,6 +562,46 @@ function PlayPageContent() {
                 <Trophy className="size-5" />
                 Leaderboard
               </button>
+            </motion.div>
+
+            {/* Try Other Modes */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0 }}
+              className="pt-4 border-t border-border"
+            >
+              <p className="text-sm text-muted-foreground mb-3">Try other modes</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  onClick={() => router.push('/music')}
+                  className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-500 text-sm font-medium hover:bg-purple-500/20 transition-colors"
+                >
+                  <Music className="size-4" />
+                  Music
+                </button>
+                <button
+                  onClick={() => router.push('/daily')}
+                  className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/30 text-accent text-sm font-medium hover:bg-accent/20 transition-colors"
+                >
+                  <Calendar className="size-4" />
+                  Daily
+                </button>
+                <button
+                  onClick={() => router.push('/time-machine')}
+                  className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary text-sm font-medium hover:bg-secondary/20 transition-colors"
+                >
+                  <Clock className="size-4" />
+                  Eras
+                </button>
+                <button
+                  onClick={() => router.push('/game-setup')}
+                  className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+                >
+                  <Play className="size-4" />
+                  Classic
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         </div>
