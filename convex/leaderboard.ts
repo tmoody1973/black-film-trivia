@@ -54,35 +54,29 @@ export const getTopScores = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
 
-    // Apply filters and get scores
-    let scores;
+    // Start with all scores ordered by score descending
+    let query = ctx.db
+      .query("leaderboard")
+      .withIndex("by_score")
+      .order("desc");
+
+    // Collect all scores first, then filter in memory
+    // This approach is simpler and works for reasonable data sizes
+    let scores = await query.collect();
+
+    // Apply filters
     if (args.difficulty) {
-      scores = await ctx.db
-        .query("leaderboard")
-        .withIndex("by_difficulty", (q) => q.eq("difficulty", args.difficulty!))
-        .order("desc")
-        .take(limit);
-    } else if (args.category) {
-      scores = await ctx.db
-        .query("leaderboard")
-        .withIndex("by_category", (q) => q.eq("category", args.category!))
-        .order("desc")
-        .take(limit);
-    } else if (args.theme) {
-      scores = await ctx.db
-        .query("leaderboard")
-        .withIndex("by_theme", (q) => q.eq("theme", args.theme!))
-        .order("desc")
-        .take(limit);
-    } else {
-      scores = await ctx.db
-        .query("leaderboard")
-        .withIndex("by_score")
-        .order("desc")
-        .take(limit);
+      scores = scores.filter((s) => s.difficulty === args.difficulty);
+    }
+    if (args.category) {
+      scores = scores.filter((s) => s.category === args.category);
+    }
+    if (args.theme) {
+      scores = scores.filter((s) => s.theme === args.theme);
     }
 
-    return scores;
+    // Return top N
+    return scores.slice(0, limit);
   },
 });
 

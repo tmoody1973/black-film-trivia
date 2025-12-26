@@ -147,7 +147,7 @@ function PlayPageContent() {
   useEffect(() => {
     if (isGameOver) {
       setShowGameOverCelebration(true)
-      saveScore()
+      saveScore().catch((err) => console.error('Failed to save score:', err))
     }
   }, [isGameOver])
 

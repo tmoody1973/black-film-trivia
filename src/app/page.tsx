@@ -175,7 +175,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Classic Mode */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -283,6 +283,28 @@ export default function Home() {
               <span className="inline-flex items-center gap-1 text-sm font-medium text-tertiary">
                 View Saved
                 <Heart className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Leaderboard */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              onClick={() => router.push("/leaderboard")}
+              className="group cursor-pointer rounded-xl border-2 border-yellow-500/20 bg-card p-6 transition-all hover:border-yellow-500 hover:shadow-lg hover:shadow-yellow-500/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-yellow-500/10 p-3">
+                <Trophy className="h-6 w-6 text-yellow-500" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Leaderboard</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                See top players and track your ranking.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-yellow-500">
+                View Rankings
+                <Trophy className="h-3 w-3" />
               </span>
             </motion.div>
           </div>
