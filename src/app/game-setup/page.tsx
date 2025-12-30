@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Film, BookOpen, Shuffle, Flame, Clock, Zap, ChevronRight, GraduationCap, School } from 'lucide-react'
+import { Film, BookOpen, Shuffle, Flame, Clock, Zap, ChevronRight, GraduationCap, School, Music, Calendar, Heart, Trophy, Sparkles, Play } from 'lucide-react'
 import {
   BLACK_DIRECTED_MOVIES,
   BLACK_AUTHORED_BOOKS,
@@ -61,6 +61,7 @@ const difficulties: { id: Difficulty; name: string; icon: React.ReactNode; descr
 
 export default function GameSetupPage() {
   const router = useRouter()
+  const [showClassicSetup, setShowClassicSetup] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<ContentCategory>('films')
   const [selectedTheme, setSelectedTheme] = useState<string>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('medium')
@@ -78,16 +79,165 @@ export default function GameSetupPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-10">
+      <div className="max-w-6xl mx-auto space-y-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-2"
         >
-          <h1 className="text-4xl font-display font-bold text-gradient-gold">Choose Your Challenge</h1>
-          <p className="text-muted-foreground">Select a category, theme, and difficulty to begin</p>
+          <h1 className="text-4xl font-display font-bold text-gradient-gold">Choose Your Adventure</h1>
+          <p className="text-muted-foreground">Multiple ways to test and expand your knowledge of Black cinema and literature.</p>
         </motion.div>
+
+        {/* Game Mode Selection */}
+        {!showClassicSetup && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Classic Mode */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              onClick={() => setShowClassicSetup(true)}
+              className="group cursor-pointer rounded-xl border-2 border-primary/20 bg-card p-6 transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-primary/10 p-3">
+                <Play className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Classic Mode</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Customize your trivia experience with films, books, or both.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+                Customize & Play
+                <Sparkles className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Music Trivia */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              onClick={() => router.push("/music")}
+              className="group cursor-pointer rounded-xl border-2 border-purple-500/20 bg-card p-6 transition-all hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-purple-500/10 p-3">
+                <Music className="h-6 w-6 text-purple-500" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Music Trivia</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Test your knowledge of Black music legends across 8 genres.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-purple-500">
+                Explore Genres
+                <Sparkles className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Daily Challenge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              onClick={() => router.push("/daily")}
+              className="group cursor-pointer rounded-xl border-2 border-accent/20 bg-card p-6 transition-all hover:border-accent hover:shadow-lg hover:shadow-accent/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-accent/10 p-3">
+                <Calendar className="h-6 w-6 text-accent" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Daily Challenge</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                10 questions everyone plays. New challenge every day!
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-accent">
+                Today&apos;s Challenge
+                <Zap className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Time Machine */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => router.push("/time-machine")}
+              className="group cursor-pointer rounded-xl border-2 border-secondary/20 bg-card p-6 transition-all hover:border-secondary hover:shadow-lg hover:shadow-secondary/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-secondary/10 p-3">
+                <Clock className="h-6 w-6 text-secondary" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Time Machine</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Explore Black cinema & literature through different eras.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-secondary">
+                Travel Through Time
+                <Sparkles className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* My Library */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              onClick={() => router.push("/library")}
+              className="group cursor-pointer rounded-xl border-2 border-tertiary/20 bg-card p-6 transition-all hover:border-tertiary hover:shadow-lg hover:shadow-tertiary/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-tertiary/10 p-3">
+                <Heart className="h-6 w-6 text-tertiary" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">My Library</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Save films and books to explore later.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-tertiary">
+                View Saved
+                <Heart className="h-3 w-3" />
+              </span>
+            </motion.div>
+
+            {/* Leaderboard */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              onClick={() => router.push("/leaderboard")}
+              className="group cursor-pointer rounded-xl border-2 border-yellow-500/20 bg-card p-6 transition-all hover:border-yellow-500 hover:shadow-lg hover:shadow-yellow-500/10"
+            >
+              <div className="mb-4 inline-flex rounded-full bg-yellow-500/10 p-3">
+                <Trophy className="h-6 w-6 text-yellow-500" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold">Leaderboard</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                See top players and track your ranking.
+              </p>
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-yellow-500">
+                View Rankings
+                <Trophy className="h-3 w-3" />
+              </span>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Classic Mode Customization (shown when Classic Mode is selected) */}
+        {showClassicSetup && (
+          <div className="max-w-4xl mx-auto space-y-10">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center gap-3"
+            >
+              <button
+                onClick={() => setShowClassicSetup(false)}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              >
+                ← Back to modes
+              </button>
+              <div className="h-4 w-px bg-border" />
+              <h2 className="text-lg font-display font-semibold">Customize Classic Mode</h2>
+            </motion.div>
 
         {/* Category Selection */}
         <motion.section
@@ -289,6 +439,8 @@ export default function GameSetupPage() {
           )}
           {' '}on <span className="text-primary font-medium">{selectedDifficulty}</span> difficulty
         </motion.div>
+          </div>
+        )}
       </div>
     </div>
   )
