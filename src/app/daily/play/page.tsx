@@ -33,6 +33,7 @@ export default function DailyPlayPage() {
   const startChallenge = useMutation(api.dailyChallenge.startDailyChallenge)
   const submitAnswer = useMutation(api.dailyChallenge.submitDailyAnswer)
   const completeChallenge = useMutation(api.dailyChallenge.completeDailyChallenge)
+  const addScore = useMutation(api.leaderboard.addScore)
   const generateQuestionAction = useAction(api.generateQuestion.generateQuestion)
 
   // Game state
@@ -142,11 +143,19 @@ export default function DailyPlayPage() {
 
     // Check if game is over (10 questions)
     if (!todaysChallenge || nextIndex >= todaysChallenge.questions.length) {
-      // Complete challenge
+      // Complete challenge and save score
       try {
         if (attemptId) {
           await completeChallenge({ attemptId })
         }
+        // Save to global leaderboard
+        await addScore({
+          score,
+          streak: maxStreak,
+          difficulty: "medium", // Daily challenges are always medium difficulty
+          category: "mixed", // Daily challenges are always mixed (5 films + 5 books)
+        })
+        console.log("Score saved to leaderboard")
       } catch (err) {
         console.error("Error completing challenge:", err)
       }
@@ -477,21 +486,30 @@ Play at: ${typeof window !== "undefined" ? window.location.origin : ""}/daily`
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="flex flex-col sm:flex-row gap-4"
+              className="space-y-4"
             >
-              <button
-                onClick={handleShare}
-                className="flex-1 btn-geometric flex items-center justify-center gap-2 py-4"
-              >
-                <Share2 className="size-5" />
-                Share Results
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={handleShare}
+                  className="flex-1 btn-geometric flex items-center justify-center gap-2 py-4"
+                >
+                  <Share2 className="size-5" />
+                  Share Results
+                </button>
+                <button
+                  onClick={() => router.push("/leaderboard")}
+                  className="flex-1 px-6 py-4 rounded-lg border-2 border-primary/30 text-primary font-semibold hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trophy className="size-5" />
+                  Leaderboard
+                </button>
+              </div>
               <button
                 onClick={() => router.push("/daily")}
-                className="flex-1 px-6 py-4 rounded-lg border-2 border-primary/30 text-primary font-semibold hover:bg-primary/10 transition-colors flex items-center justify-center gap-2"
+                className="w-full px-6 py-3 rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors flex items-center justify-center gap-2"
               >
                 <Home className="size-5" />
-                Back to Hub
+                Back to Daily Hub
               </button>
             </motion.div>
           </motion.div>
